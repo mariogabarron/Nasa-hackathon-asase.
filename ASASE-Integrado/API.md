@@ -159,3 +159,10 @@ búsqueda, el servicio ordena las propuestas encontradas por IAC medio descenden
 No es una garantía de óptimo global. La validación de fechas futuras de las
 recomendaciones se aplica en la interfaz; la API sigue admitiendo escenarios
 históricos para otros clientes y pruebas.
+
+
+## Cobertura territorial de esta integración
+
+`POST /predecir` acepta únicamente puntos o áreas completamente cubiertos por el polígono de Ghana incluido en el proyecto. Una selección exterior devuelve 422 antes de consultar las fuentes. El orden de coordenadas y los demás campos se mantienen. El frontend restringe las fechas IAC al pasado y las recomendaciones al futuro; la API conserva la compatibilidad temporal del motor.
+
+La estimación económica es un cálculo de presupuesto en el frontend, independiente del contrato y las puntuaciones de `/predecir`. Se documenta en la página Fuentes y en README.md.

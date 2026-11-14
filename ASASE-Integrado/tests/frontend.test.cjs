@@ -95,7 +95,15 @@ async function setup({
         : catalogue;
     return bridge(url, options);
   };
-  for (const file of ["vendor/leaflet/leaflet.js", "base.js", "app.js"])
+  for (const file of [
+    "vendor/leaflet/leaflet.js",
+    "base.js",
+    "data/ghana.js",
+    "geo.js",
+    "economics.js",
+    "analysis-ui.js",
+    "app.js",
+  ])
     vm.runInContext(
       readFileSync(path.join(root, "frontend", file), "utf8"),
       dom.getInternalVMContext(),
@@ -135,6 +143,209 @@ async function setup({
 function mapClick(q, lat = 9.4, lng = -0.84) {
   q.eval(`map.fire('click',{latlng:L.latLng(${lat},${lng})})`);
 }
+
+test("Truncado sin redondeo ni ceros añadidos y sin modificar valores originales", async () => {
+  const q = await setup();
+  try {
+    for (const [v, want] of [
+      [89.99999, "89.99"],
+      [100, "100"],
+      [0.29, "0.29"],
+      [-1.239, "-1.23"],
+      [1e-7, "0"],
+      [1.2e21, "1200000000000000000000"],
+      [null, "—"],
+    ])
+      assert.equal(q.eval(`truncated(${JSON.stringify(v)})`), want);
+    q.click("[data-demo]");
+    mapClick(q, 9.41234567, -0.841234567);
+    assert.equal(q.eval("state.point[0]"), 9.41234567);
+    assert.equal(
+      q.w.document.querySelector("#coordinates").elements.lat.value,
+      "9.41234",
+    );
+    q.w.fetch = async () => ({
+      ok: true,
+      json: async () => ({ iac: 79.99999, razon: "test" }),
+    });
+    q.click('[data-analyse="iac"]');
+    await q.tick();
+    assert.match(
+      q.w.document.querySelector(".iac-number").textContent,
+      /79.99/,
+    );
+    assert.equal(q.eval("state.result.data.iac"), 79.99999);
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Ghana: clic, coordenadas, geolocalización y área comprueban el polígono; navegación mundial libre", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    mapClick(q);
+    mapClick(q, 6.13, 1.22);
+    assert.equal(q.eval("state.point[0]"), 9.4);
+    q.fill('[name="lat"]', "0");
+    q.fill('[name="lon"]', "0");
+    q.submit("#coordinates");
+    assert.equal(q.eval("state.point[0]"), 9.4);
+    q.w.navigator.geolocation = {
+      getCurrentPosition(ok) {
+        ok({ coords: { latitude: 12, longitude: 0 } });
+      },
+    };
+    q.click("#locate");
+    assert.equal(q.eval("state.point[0]"), 9.4);
+    q.eval("map.setView([40,-74],3)");
+    assert.equal(q.eval("map.getCenter().lat"), 40);
+    assert.equal(q.eval("map.options.maxBounds"), undefined);
+    q.click('[data-view="parcels"]');
+    q.click("#new-parcel");
+    assert.equal(q.w.document.querySelector('[data-selection="point"]'), null);
+    assert.equal(q.w.document.querySelector("#coordinates"), null);
+    mapClick(q, 6.668607, -0.27776);
+    mapClick(q, 7.812855, 0.520324);
+    assert.equal(q.eval("state.draft.bbox"), null);
+    q.fill("#parcel-name", "Ghana");
+    q.submit("#parcel-form");
+    assert.equal(q.eval("parcels.length"), 0);
+    q.click('[data-selection="bbox"]');
+    mapClick(q, 9, -1);
+    mapClick(q, 10, 0);
+    q.submit("#parcel-form");
+    assert.equal(q.eval("parcels.length"), 1);
+    const selection = q.eval("state.selectedParcel");
+    mapClick(q, 9.1, -1.1);
+    assert.equal(q.eval("state.selectedParcel"), selection);
+    assert.equal(q.eval("marker"), null);
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Histórico solo pasado; historial ordenado compartido por mapa y recomendaciones", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    mapClick(q);
+    assert.equal(q.w.document.querySelector("#start-date").max, "2026-11-13");
+    q.fill("#end-date", "2026-11-14");
+    assert.match(
+      q.w.document.querySelector("#historical-date-error").textContent,
+      /pasadas/,
+    );
+    const n = q.calls.length;
+    await q.eval('analyse("iac")');
+    assert.equal(q.calls.length, n);
+    q.fill("#start-date", "2025-04-01");
+    q.fill("#end-date", "2025-04-03");
+    q.fill("#history-crop", "1");
+    q.click("#add-history");
+    q.fill("#history-crop", "5");
+    q.click("#add-history");
+    q.click('[data-analyse="iac"]');
+    await q.tick();
+    assert.deepEqual(JSON.parse(q.calls.at(-1).body).historial, [1, 5]);
+    q.click('[data-view="recommendations"]');
+    assert.equal(q.w.document.querySelectorAll(".history-chips li").length, 2);
+    q.click('[data-remove-history="0"]');
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    assert.deepEqual(JSON.parse(q.calls.at(-1).body).historial, [5]);
+    q.click('[data-view="overview"]');
+    assert.deepEqual(Array.from(q.eval("state.pointHistory")), [5]);
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Economía: pérdidas, ciclos repetidos, área, campos ausentes y no convertir IAC a rendimiento", async () => {
+  const q = await setup();
+  try {
+    const calc = (rot, budgets = "ECON_REFERENCES", area = 1) =>
+      q.eval(
+        `estimateEconomics({rotacion:${JSON.stringify(rot)}},${budgets},state.catalog,${area})`,
+      );
+    const maize = { cultivo_id: 1, dias: 120 };
+    assert.equal(calc([maize]).margin, -1051.1);
+    assert.equal(calc([maize, maize]).margin, -2102.2);
+    assert.equal(
+      calc([{ cultivo_id: 7, dias: 115 }], undefined, 2).margin,
+      477.4,
+    );
+    assert.equal(calc([{ cultivo_id: 12, dias: 80 }]).margin, null);
+    assert.equal(calc([{ cultivo_id: 7, dias: 20 }]).margin, null);
+    assert.equal(calc([{ tipo: "barbecho", dias: 10 }]).margin, null);
+    assert.equal(
+      calc([{ ...maize, iac_estimado: 20 }]).margin,
+      calc([{ ...maize, iac_estimado: 90 }]).margin,
+    );
+    assert.equal(calc([maize], "{1:{revenue:0,cost:10}}").margin, -10);
+    assert.equal(calc([maize], "{1:{revenue:null,cost:10}}").margin, null);
+    assert.equal(calc([maize], "{1:{revenue:100,cost:-10}}").margin, null);
+    assert.ok(q.eval("hectares([9,-1,9.001,-.999])") > 1);
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Cada recomendación muestra beneficio o datos pendientes; presupuesto editable y fuentes ES/EN", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    q.click('[data-view="recommendations"]');
+    mapClick(q);
+    q.w.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        recomendaciones: [
+          {
+            iac_medio_cultivado: 90,
+            dias_cultivados: 115,
+            rotacion: [{ cultivo_id: 7, dias: 115 }],
+          },
+          {
+            iac_medio_cultivado: 80,
+            dias_cultivados: 80,
+            rotacion: [{ cultivo_id: 12, dias: 80 }],
+          },
+        ],
+      }),
+    });
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    assert.equal(q.w.document.querySelectorAll(".economic-result").length, 2);
+    assert.match(
+      q.w.document.querySelector(".economic-result").textContent,
+      /238.7 GHS\/ha/,
+    );
+    assert.match(
+      q.w.document.querySelectorAll(".economic-result")[1].textContent,
+      /Completa/,
+    );
+    q.fill('[data-budget-crop="12"][data-budget-field="revenue"]', "1000");
+    q.fill('[data-budget-crop="12"][data-budget-field="cost"]', "300");
+    q.submit("#economic-budget");
+    assert.match(
+      q.w.document.querySelectorAll(".economic-result")[1].textContent,
+      /700 GHS\/ha/,
+    );
+    q.click('[data-view="sources"]');
+    assert.ok(
+      q.w.document.querySelector(
+        'a[href="https://doi.org/10.3390/su15097386"]',
+      ),
+    );
+    assert.match(q.w.document.body.textContent, /2022/);
+    q.click('[data-language="en"]');
+    assert.match(q.w.document.body.textContent, /Margin = revenue/);
+    assert.ok(!q.w.document.body.textContent.includes("Costes variables"));
+  } finally {
+    q.dom.window.close();
+  }
+});
 
 test("Inicio, idiomas, Leaflet, zoom, punto e IAC real con fuentes controladas", async () => {
   const q = await setup();
@@ -359,6 +570,7 @@ test("Catálogo caído bloquea consultas, permite reintentar; almacenamiento fal
     b.click("#new-parcel");
     b.fill("#parcel-name", "Sin espacio");
     mapClick(b);
+    mapClick(b, 9.5, -0.7);
     b.submit("#parcel-form");
     assert.match(b.w.document.body.textContent, /solo están en memoria/);
   } finally {
@@ -429,6 +641,20 @@ test("Parcelas migra sin cultivo plantado y separa fechas IAC de recomendaciones
     q.click('[data-view="parcels"]');
     q.click('[data-parcel="old"]');
     assert.deepEqual(Array.from(q.eval("activeParcel().history")), [5, 2]);
+    assert.ok(q.w.document.querySelector('[data-analyse="iac"]').disabled);
+    assert.equal(q.w.document.querySelector("#coordinates"), null);
+    q.click("#edit-parcel");
+    assert.equal(q.w.document.querySelector('[data-selection="point"]'), null);
+    q.submit("#parcel-form");
+    assert.match(
+      q.w.document.querySelector("#parcel-error").textContent,
+      /área/,
+    );
+    mapClick(q, 9, -1);
+    mapClick(q, 10, 0);
+    q.submit("#parcel-form");
+    assert.deepEqual(Array.from(q.eval("activeParcel().history")), [5, 2]);
+
     q.fill("#start-date", "2025-04-01");
     q.fill("#end-date", "2025-04-03");
     q.fill("#rec-start-date", "2027-01-01");

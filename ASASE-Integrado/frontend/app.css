@@ -573,3 +573,82 @@ input[aria-invalid="true"] {
     padding: 11px 7px;
   }
 }
+.point-history,
+.economic-editor {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #dce5db;
+  border-radius: 12px;
+}
+.point-history summary,
+.economic-editor summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.point-history .field {
+  margin-bottom: 10px;
+}
+.economic-editor fieldset {
+  min-width: 0;
+  border: 1px solid #dce5db;
+  border-radius: 8px;
+  margin: 14px 0;
+  padding: 12px;
+}
+.economic-editor legend {
+  font-weight: 600;
+}
+.economic-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.economic-fields input {
+  width: 100%;
+  min-width: 0;
+}
+.economic-result {
+  background: #f1f5ef;
+  padding: 16px;
+  border-radius: 10px;
+  margin: 16px 0;
+}
+.economic-result h4 {
+  margin: 0 0 8px;
+}
+.economic-result p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.economic-value {
+  font-size: 23px;
+  color: #245844;
+  overflow-wrap: anywhere;
+}
+.economic-negative {
+  color: #a13030;
+}
+.economic-table {
+  overflow-x: auto;
+}
+.economic-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.economic-table th,
+.economic-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #dce5db;
+}
+.economic-table caption {
+  text-align: left;
+  margin-bottom: 8px;
+}
+@media (max-width: 480px) {
+  .economic-fields {
+    grid-template-columns: 1fr;
+  }
+}

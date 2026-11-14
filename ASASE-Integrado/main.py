@@ -15,6 +15,7 @@ from errores import DatosInsuficientes, ErrorConfiguracion, ErrorFuente
 from getter import get_tabla
 from servicio import predecir, CATALOGO
 from validacion import validar_consulta, resolver_periodo
+from geografia import validar_ghana
 
 LOG = logging.getLogger(__name__)
 Coordenada = StrictInt | StrictFloat
@@ -39,6 +40,7 @@ class Peticion(BaseModel):
             raise ValueError("n_recomendaciones solo se admite con rotaciones")
         self.end_date = resolver_periodo(self.start_date, self.end_date, self.accion)
         validar_consulta(self.start_date, self.end_date, self.point, self.bbox, permitir_largo=self.accion == "rotaciones")
+        validar_ghana(self.point, self.bbox)
         if self.accion == "rotaciones" and self.cultivo_id is not None:
             raise ValueError("cultivo_id solo se utiliza con iac")
         return self

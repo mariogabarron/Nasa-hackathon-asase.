@@ -42,9 +42,9 @@ El getter original conserva su proyecto predeterminado; configura expresamente e
 ## Pantallas
 
 - **Inicio de sesión:** se conserva la pantalla original y su acceso de demostración, con ES/EN. No autentica usuarios: no envía ni guarda contraseñas. No protege los endpoints ni los registros locales.
-- **Mapa:** rango de fechas, selector de nombres cargados desde `cultivos.json` a través de `/cultivos`, ordenado alfabéticamente en ES/EN, sin IDs visibles y con buscador (ignora acentos), mapa Leaflet con zoom, autolocalización y selección al pulsar. El panel derecho permite obtener el IAC del cultivo seleccionado. También se pueden introducir coordenadas manualmente.
-- **Recomendaciones:** selección de punto, fechas de plantación desde mañana y entre una y cinco propuestas. Las propuestas devueltas se muestran por IAC medio descendente, con días cultivados como desempate y nulos al final. Muestra las secuencias devueltas por la API, IAC de cada ciclo, fechas, ocupación y supuestos. No inventa recomendaciones cuando la API falla.
-- **Parcelas:** crear, seleccionar, editar y eliminar parcelas; elegir un punto representativo o dibujar un rectángulo pulsando dos esquinas opuestas. Cada parcela guarda su nombre, ubicación e historial ordenado; no existe un cultivo actual/plantado. El cultivo elegido en el selector superior sirve solo para calcular un IAC. El botón de recomendaciones está en una sección separada y tiene sus propias fechas debajo, independientes de las del IAC.
+- **Mapa:** histórico con fechas pasadas (hasta ayer), selector de nombres cargados desde `cultivos.json` a través de `/cultivos`, ordenado alfabéticamente en ES/EN, sin IDs visibles y con buscador (ignora acentos), mapa Leaflet con zoom, autolocalización y selección al pulsar. El panel derecho permite obtener el IAC del cultivo seleccionado. También se pueden introducir coordenadas manualmente y añadir un historial de cultivos previo. Se puede navegar por el mapamundi; solo se aceptan selecciones dentro del polígono de Ghana.
+- **Recomendaciones:** selección de punto, fechas de plantación desde mañana y entre una y cinco propuestas. Las propuestas devueltas se muestran por IAC medio descendente, con días cultivados como desempate y nulos al final. Muestra las secuencias devueltas por la API, IAC de cada ciclo, fechas, ocupación y supuestos. Permite añadir historial previo y consultar el beneficio económico estimado de cada propuesta con presupuesto suficiente. No inventa recomendaciones cuando la API falla.
+- **Parcelas:** crear, seleccionar, editar y eliminar parcelas; dibujar un rectángulo pulsando dos esquinas opuestas, completamente dentro de Ghana. No hay selector ni formulario de puntos en esta página. Cada parcela guarda su nombre, ubicación e historial ordenado; no existe un cultivo actual/plantado. El cultivo elegido en el selector superior sirve solo para calcular un IAC. El botón de recomendaciones está en una sección separada y tiene sus propias fechas debajo, independientes de las del IAC.
 - **Fuentes:** explicación del origen de datos, alcance del motor y acceso a la documentación de la API.
 
 La geolocalización necesita permiso del navegador y un contexto seguro: HTTPS o localhost. La selección manual sigue disponible si se deniega el permiso. Leaflet 1.9.4 está incluido en `frontend/vendor`; las teselas se descargan de OpenStreetMap y conservan su atribución.
@@ -59,7 +59,7 @@ La geolocalización necesita permiso del navegador y un contexto seguro: HTTPS o
 | Recomendaciones | `accion: "rotaciones"`, `n_recomendaciones` y rango de plantación inclusivo; sin `cultivo_id` |
 | Historial | Lista de IDs numéricos, del más antiguo al más reciente; máximo 100 |
 
-El historial previo se introduce manualmente, del más antiguo al más reciente. No se añade automáticamente el cultivo que se está evaluando. Las consultas de puntos independientes envían historial vacío. El selector superior cambia únicamente el cultivo del análisis, sin guardar un cultivo plantado en la parcela.
+El historial previo se introduce manualmente, del más antiguo al más reciente. No se añade automáticamente el cultivo que se está evaluando. Mapa y Recomendaciones comparten un historial editable durante la sesión y lo envían a la API; las parcelas conservan su historial independiente. Revisa el historial si cambias de punto. El selector superior cambia únicamente el cultivo del análisis, sin guardar un cultivo plantado en la parcela.
 
 Las recomendaciones utilizan exclusivamente el patrón mensual de 2025 que repite el motor original. No son un pronóstico meteorológico. El IAC usa las fechas observadas indicadas por el usuario. En las rotaciones, `fecha_fin` de cada tramo es exclusiva; el fin del rango solicitado es inclusivo.
 
@@ -67,14 +67,30 @@ Las áreas son cajas rectangulares, no polígonos catastrales: NASA POWER toma e
 
 ### Fechas de recomendaciones y colores
 
-Las recomendaciones, tanto por punto como por parcela, requieren ambas fechas posteriores a hoy (desde mañana, según la fecha local del navegador). Hay un mínimo en el calendario, un aviso pequeño junto a los campos y una comprobación antes de enviar. Fechas vacías, pasadas, de hoy o un rango invertido bloquean la consulta. El IAC mantiene su rango observado independiente. La API conserva la posibilidad de consultar escenarios históricos para compatibilidad; esta restricción de fechas futuras pertenece al frontend.
+Las recomendaciones, tanto por punto como por parcela, requieren ambas fechas posteriores a hoy (desde mañana, según la fecha local del navegador). Hay un mínimo en el calendario, un aviso pequeño junto a los campos y una comprobación antes de enviar. Fechas vacías, pasadas, de hoy o un rango invertido bloquean la consulta. El IAC mantiene su rango histórico independiente y el frontend solo permite fechas pasadas, hasta ayer, con mensaje de error y comprobación antes de enviar. La API conserva la posibilidad de consultar escenarios históricos para compatibilidad; esta restricción de fechas futuras pertenece al frontend.
 
 Los IAC individuales, medios de propuesta y de cada ciclo se colorean en rojo para valores `<40`, ámbar para `40 ≤ IAC <70` y verde para `IAC ≥70`. Una leyenda acompaña los resultados; los nulos aparecen como `—` en tono neutro. Son bandas de interfaz, no una nueva calibración agronómica.
+
+## Formato y estimación económica
+
+Los valores visibles se truncan hacia cero: dos decimales como máximo para IAC, porcentajes, importes y superficies, y cinco para coordenadas. No se añaden ceros a enteros. Se conserva la precisión interna para consultas, cálculos y ordenación.
+
+Cada propuesta incluye beneficio estimado, entendido como **margen antes de costes fijos**, en GHS/ha para puntos y en GHS totales para parcelas. Se suman ingresos menos costes variables de cada ciclo completo, sin ajustar el rendimiento por IAC. El presupuesto puede modificarse sin repetir la consulta climática. Se mantiene en memoria durante la sesión.
+
+Referencias históricas editables: [Adelesi et al. (2023), tabla 4](https://doi.org/10.3390/su15097386), norte de Ghana, para maíz con manejo medio, arroz de secano, soja y cacahuete. **No son precios actuales ni previsiones**. Para los otros cultivos se solicitan ingresos y costes propios; sin datos completos no se presenta una cifra total ficticia. La página **Fuentes** incluye los importes, la procedencia, fechas, licencia y el método del [Ministerio de Finanzas de Ghana (noviembre de 2024, pág. 83)](https://mofep.gov.gh/sites/default/files/news/Methodologies_for_Preparation_and_Integrated_Appraisal_of_Public_Investment_Projects.pdf#page=91).
+
+Se supone que toda el área rectangular se cultiva en cada ciclo; su superficie se aproxima sobre una esfera de radio medio terrestre. El barbecho se supone sin ingresos ni costes variables. No incluye costes fijos, inversión, impuestos, descuento temporal ni ganancia incremental frente a un escenario anterior. Los márgenes negativos se muestran como pérdidas; los ciclos incompletos no se valoran. Las propuestas continúan ordenadas por IAC, no por dinero.
+
+## Delimitación de Ghana
+
+La geometría local proviene de [geoBoundaries gbOpen GHA ADM0](https://www.geoboundaries.org/api/current/gbOpen/GHA/ADM0/), identificador `GHA-ADM0-71095829`, commit `9469f09`, dominio público (Stanford Digital Repository). La selección se valida en el frontend y en `/predecir`; para rectángulos se comprueba toda el área, no solo las esquinas. El mapa no tiene límites de desplazamiento ni zoom restringido al país. Fuentes documenta las fechas y procedencia de la geometría.
+
+`frontend/data/ghana.js` es una copia generada de `ghana.geojson` para cargar la geometría sin otra petición de red. Deben actualizarse juntas; una prueba comprueba que coinciden. El backend lee el GeoJSON mediante Shapely.
 
 ## Persistencia, idiomas y errores
 
 - Las parcelas se guardan en `localStorage`, clave `asase.parcels.v3`, sin base de datos compartida ni sincronización por cuenta. Distintos usuarios del mismo navegador/origen comparten esos registros. Borrar los datos del navegador los elimina.
-- Las parcelas existentes en `asase.parcels.v3` se migran automáticamente: se elimina `cropId` conservando nombre, ubicación e historial. No se transforma ese antiguo atributo en un registro histórico inventado.
+- Las parcelas existentes en `asase.parcels.v3` se migran automáticamente: se elimina `cropId` conservando nombre, ubicación e historial. No se transforma ese antiguo atributo en un registro histórico inventado. Las parcelas antiguas basadas en un punto se conservan, pero requieren editar y delimitar un área antes de volver a analizarlas; no se inventa su superficie.
 - Los registros regionales del frontend antiguo en `asase.records.v2` no se borran ni se migran automáticamente: no contienen coordenadas reales. Si los necesitas, crea las nuevas parcelas con su ubicación verificada.
 - Si el navegador rechaza el almacenamiento, se avisa y los cambios quedan solo en memoria. Una consulta no modifica el historial ni guarda su resultado como observación histórica.
 - Los resultados muestran la ubicación, las fechas, el cultivo y el historial usados. Cambiar esos parámetros invalida el resultado y descarta respuestas tardías. El botón de cancelar detiene la espera del cliente; un cálculo ya iniciado en el servidor puede terminar igualmente.
@@ -109,6 +125,8 @@ Consulta `VERIFICACION-INTEGRACION.md` para los resultados y las limitaciones ve
 - `frontend/index.html`: entrada de la aplicación.
 - `frontend/base.js`, `original.css`: pantalla de acceso, traducciones, iconos y base visual conservados.
 - `frontend/app.js`, `app.css`: páginas integradas, cliente API, Leaflet y parcelas.
+- `frontend/analysis-ui.js`, `economics.js`: historial, fechas, presupuesto, fuentes y truncado visual.
+- `frontend/geo.js`, `frontend/data/ghana.*`, `geografia.py`: delimitación compartida de Ghana.
 - `cultivos.json`: catálogo único del backend; no se duplica en el frontend.
 - `getter.py`, `validacion.py`: fuentes y validación originales.
 - `servicio.py`: agregación y orden descendente de las propuestas devueltas; la generación sigue usando la búsqueda aproximada original.

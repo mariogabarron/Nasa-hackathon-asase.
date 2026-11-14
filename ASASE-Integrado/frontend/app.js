@@ -92,6 +92,8 @@ const state = {
   catalogError: "",
   cropId: null,
   point: null,
+  pointHistory: [],
+  budgets: structuredClone(ECON_REFERENCES),
   range: [...initialRange],
   recRange: futureRange(),
   parcelRecRange: futureRange(),
@@ -134,7 +136,7 @@ const ranges = (
     : state.view === "parcels"
       ? state.parcelRange
       : state.range;
-const coordText = (p) => p.map((v) => v.toFixed(5)).join(", ");
+const coordText = (p) => p.map((v) => truncated(v, 5)).join(", ");
 const placeText = (p) =>
   p.bbox ? `BBOX · ${coordText(p.bbox)}` : coordText(p.point);
 const normalizeSearch = (value) =>
@@ -241,14 +243,30 @@ function rangeFields() {
   if (state.view === "recommendations")
     return `<div class="recommendation-filters">${recommendationDates()}<label class="field">${t("Número de propuestas", "Number of proposals")}<select id="rec-count">${[1, 2, 3, 4, 5].map((n) => `<option ${n === (state.recCount || 3) ? "selected" : ""}>${n}</option>`).join("")}</select></label></div><p class="period-note">${t("Fechas de plantación futuras. Propuestas ordenadas por IAC medio descendente, con días cultivados como desempate. Escenarios de 2025, no pronósticos.", "Future planting dates. Proposals ranked by descending mean IAC, with cropped days as a tiebreaker. Scenarios based on 2025, not forecasts.")}</p>`;
   const range = ranges("iac");
-  return `<div class="filter-strip"><label class="field filter-field">${t("IAC · Desde", "IAC · From")}<input id="start-date" type="date" required value="${range[0]}"></label><label class="field filter-field">${t("IAC · Hasta (incluido)", "IAC · To (inclusive)")}<input id="end-date" type="date" required value="${range[1]}"></label>${cropPicker("crop", t("Cultivo para analizar", "Crop to analyse"), state.cropId, "filter-field crop-control")}</div><p class="period-note">${t("IAC: período observado de hasta 365 días. El cultivo elegido solo se usa para este análisis.", "IAC: observed period of up to 365 days. The selected crop is only used for this analysis.")}</p>`;
+  return `<div class="filter-strip"><label class="field filter-field">${t("Histórico IAC · Desde", "Historical IAC · From")}<input id="start-date" type="date" required max="${pastLimit()}" value="${range[0]}"></label><label class="field filter-field">${t("Histórico IAC · Hasta (incluido)", "Historical IAC · To (inclusive)")}<input id="end-date" type="date" required max="${pastLimit()}" value="${range[1]}"></label>${cropPicker("crop", t("Cultivo para analizar", "Crop to analyse"), state.cropId, "filter-field crop-control")}</div><p class="period-note">${t("Consulta del histórico: selecciona fechas pasadas, hasta ayer, y un máximo de 365 días. El cultivo elegido solo se usa para este análisis.", "Historical data: select past dates, up to yesterday, and a maximum of 365 days. The selected crop is only used for this analysis.")}</p>`;
 }
 function coordinatesForm() {
-  return `<form id="coordinates" class="coords"><label class="field">${t("Latitud", "Latitude")}<input name="lat" type="number" min="-90" max="90" step="any" required value="${state.point?.[0] ?? ""}" placeholder="9.4"></label><label class="field">${t("Longitud", "Longitude")}<input name="lon" type="number" min="-180" max="180" step="any" required value="${state.point?.[1] ?? ""}" placeholder="-0.84"></label><button class="muted-button" type="submit">${t("Ir al punto", "Go to point")}</button></form>`;
+  if (state.view === "parcels") return "";
+  return `<form id="coordinates" class="coords"><label class="field">${t("Latitud", "Latitude")}<input name="lat" type="number" min="-90" max="90" step="any" required value="${state.point ? truncated(state.point[0], 5) : ""}" placeholder="9.4"></label><label class="field">${t("Longitud", "Longitude")}<input name="lon" type="number" min="-180" max="180" step="any" required value="${state.point ? truncated(state.point[1], 5) : ""}" placeholder="-0.84"></label><button class="muted-button" type="submit">${t("Ir al punto", "Go to point")}</button></form>`;
 }
 function mapCard() {
-  const creating = state.view === "parcels" && state.draft;
-  return `<section class="card"><div class="card-header"><div><h2 class="card-headline">${t("Explora el territorio", "Explore the land")}</h2><p class="card-sub">${creating && state.selection === "bbox" ? t("Pulsa dos esquinas opuestas para delimitar un rectángulo.", "Click two opposite corners to define a rectangle.") : t("Pulsa en el mapa para seleccionar un punto.", "Click on the map to select a point.")}</p></div><button class="muted-button" id="locate" ${state.geoBusy ? "disabled" : ""}>${t("◎ Mi ubicación", "◎ My location")}</button></div>${creating ? `<div class="map-tools"><button class="muted-button ${state.selection === "point" ? "chosen" : ""}" data-selection="point">${t("Punto", "Point")}</button><button class="muted-button ${state.selection === "bbox" ? "chosen" : ""}" data-selection="bbox">${t("Área rectangular", "Rectangular area")}</button><span id="drawing-status" role="status"></span></div>` : ""}<div id="map" aria-label="${t("Mapa interactivo", "Interactive map")}" tabindex="0"></div><p id="map-status" role="status" class="map-status"></p><div class="map-bottom">${coordinatesForm()}<p class="coordinate-readout" id="point-label">${state.point ? coordText(state.point) : t("Todavía no hay un punto seleccionado.", "No point selected yet.")}</p></div></section>`;
+  const isParcel = state.view === "parcels",
+    creating = isParcel && state.draft;
+  const instruction = isParcel
+    ? creating
+      ? t(
+          "Pulsa dos esquinas opuestas para delimitar un área dentro de Ghana.",
+          "Click two opposite corners to define an area within Ghana.",
+        )
+      : t(
+          "Crea o edita una parcela para delimitar su área.",
+          "Create or edit a plot to define its area.",
+        )
+    : t(
+        "Selecciona un punto dentro de Ghana. Puedes explorar todo el mapamundi.",
+        "Select a point within Ghana. You can explore the whole world map.",
+      );
+  return `<section class="card"><div class="card-header"><div><h2 class="card-headline">${t("Explora el territorio", "Explore the land")}</h2><p class="card-sub">${instruction}</p></div><button class="muted-button" id="locate" ${state.geoBusy ? "disabled" : ""}>${t("◎ Mi ubicación", "◎ My location")}</button></div>${creating ? `<div class="map-tools"><button type="button" class="muted-button chosen" data-selection="bbox">${t("Dibujar área rectangular", "Draw rectangular area")}</button><span id="drawing-status" role="status"></span></div>` : ""}<div id="map" aria-label="${t("Mapa interactivo", "Interactive map")}" tabindex="0"></div><p id="map-status" role="status" class="map-status"></p><div class="map-bottom">${coordinatesForm()}${!isParcel ? `<p class="coordinate-readout" id="point-label">${state.point ? coordText(state.point) : t("Todavía no hay un punto seleccionado.", "No point selected yet.")}</p>` : ""}</div></section>`;
 }
 function resultPanel() {
   if (state.busy)
@@ -262,7 +280,7 @@ function resultPanel() {
   if (action === "iac")
     return (
       contextHtml +
-      `<div class="iac-result"><span>${esc(cropLabel(context.cropId))}</span><div class="iac-number ${iacClass(data.iac)}">${typeof data.iac === "number" ? data.iac.toFixed(2) : "—"}<small>/100</small></div><h3>${t("Índice de aptitud del cultivo", "Crop suitability index")}</h3><p data-api-text>${esc(data.razon || t("Sin factor limitante señalado por la API.", "No limiting factor reported by the API."))}</p></div>`
+      `<div class="iac-result"><span>${esc(cropLabel(context.cropId))}</span><div class="iac-number ${iacClass(data.iac)}">${typeof data.iac === "number" ? truncated(data.iac) : "—"}<small>/100</small></div><h3>${t("Índice de aptitud del cultivo", "Crop suitability index")}</h3><p data-api-text>${esc(data.razon || t("Sin factor limitante señalado por la API.", "No limiting factor reported by the API."))}</p></div>`
     );
   const plans = [...(data.recomendaciones || [data])].sort(
     (a, b) =>
@@ -271,7 +289,8 @@ function resultPanel() {
   );
   return (
     contextHtml +
-    `<p class="notice">${t("Patrón mensual de 2025 repetido. No es un pronóstico meteorológico.", "Repeated monthly pattern of 2025. This is not a weather forecast.")}</p>${iacLegend()}${data.aviso_recomendaciones ? `<p data-api-text>${esc(data.aviso_recomendaciones)}</p>` : ""}${plans.map((p, i) => `<article class="plan"><h3>${t("Propuesta", "Proposal")} ${i + 1}</h3><div class="plan-metrics"><span><b>${p.dias_cultivados}</b> ${t("días cultivados", "days cropped")}</span><span><b>${p.porcentaje_ocupacion ?? "—"}%</b> ${t("ocupación", "occupancy")}</span><span><b class="${iacClass(p.iac_medio_cultivado)}">${p.iac_medio_cultivado ?? "—"}</b> IAC</span></div><ol class="rotation">${(p.rotacion || []).map((r) => `<li><strong>${r.cultivo_id ? esc(cropLabel(r.cultivo_id)) : t("Barbecho / preparación", "Fallow / preparation")}</strong><span>${esc(r.fecha_inicio)} → ${esc(r.fecha_fin)} · ${r.dias} ${t("días", "days")}</span>${r.iac_estimado != null ? `<b class="${iacClass(r.iac_estimado)}">IAC ${r.iac_estimado}</b>` : ""}<p data-api-text>${esc(r.justificacion || r.razon || "")}</p></li>`).join("")}</ol><p class="period-note">${t("El final de cada tramo es exclusivo.", "The end date of each segment is exclusive.")}</p><details><summary>${t("Justificación y supuestos", "Rationale and assumptions")}</summary><p data-api-text>${esc(p.justificacion)}</p><ul data-api-text>${(p.supuestos || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ul></details></article>`).join("")}`
+    economicsEditor(plans) +
+    `<p class="notice">${t("Patrón mensual de 2025 repetido. No es un pronóstico meteorológico.", "Repeated monthly pattern of 2025. This is not a weather forecast.")}</p>${iacLegend()}${data.aviso_recomendaciones ? `<p data-api-text>${esc(data.aviso_recomendaciones)}</p>` : ""}${plans.map((p, i) => `<article class="plan"><h3>${t("Propuesta", "Proposal")} ${i + 1}</h3><div class="plan-metrics"><span><b>${p.dias_cultivados}</b> ${t("días cultivados", "days cropped")}</span><span><b>${truncated(p.porcentaje_ocupacion)}%</b> ${t("ocupación", "occupancy")}</span><span><b class="${iacClass(p.iac_medio_cultivado)}">${truncated(p.iac_medio_cultivado)}</b> IAC</span></div>${economicPanel(p, context)}<ol class="rotation">${(p.rotacion || []).map((r) => `<li><strong>${r.cultivo_id ? esc(cropLabel(r.cultivo_id)) : t("Barbecho / preparación", "Fallow / preparation")}</strong><span>${esc(r.fecha_inicio)} → ${esc(r.fecha_fin)} · ${r.dias} ${t("días", "days")}</span>${r.iac_estimado != null ? `<b class="${iacClass(r.iac_estimado)}">IAC ${truncated(r.iac_estimado)}</b>` : ""}<p data-api-text>${esc(r.justificacion || r.razon || "")}</p></li>`).join("")}</ol><p class="period-note">${t("El final de cada tramo es exclusivo.", "The end date of each segment is exclusive.")}</p><details><summary>${t("Justificación y supuestos", "Rationale and assumptions")}</summary><p data-api-text>${esc(p.justificacion)}</p><ul data-api-text>${(p.supuestos || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ul></details></article>`).join("")}`
   );
 }
 function analysisCard() {
@@ -279,11 +298,14 @@ function analysisCard() {
     p = state.view === "parcels" ? activeParcel() : null;
   const enabled =
     state.catalog.length &&
-    (state.view === "parcels" ? p : state.point) &&
+    (state.view === "parcels"
+      ? p?.bbox && boxInGhana(p.bbox)
+      : state.point && inGhana(state.point)) &&
     !state.draft;
   const recButton = `<button class="primary-button" data-analyse="rotaciones" ${!enabled || state.busy || recommendationDateError() ? "disabled" : ""}>${t("Obtener recomendaciones", "Get recommendations")}</button>`;
   return `<aside class="card analysis"><div class="eyebrow">${t("ANÁLISIS DEL TERRITORIO", "LAND ANALYSIS")}</div><h2>${p ? esc(p.name) : isRec ? t("Qué cultivar aquí", "What to grow here") : t("Conoce su aptitud", "Understand its suitability")}</h2><p class="analysis-description">${isRec ? t("Consulta las secuencias de cultivos que propone el motor para este punto.", "Request crop sequences proposed by the engine for this point.") : t("Evalúa el cultivo seleccionado con el clima y el suelo de esta ubicación.", "Evaluate the selected crop using the climate and soil at this location.")}</p>
- ${!isRec ? `<section class="iac-actions"><button class="primary-button" data-analyse="iac" ${!enabled || state.busy || !state.cropId ? "disabled" : ""}>${t("Obtener IAC", "Get IAC")} ${I("arrow")}</button>${iacLegend()}</section>` : `<div class="analysis-actions">${recButton}</div>`}
+ ${state.view !== "parcels" ? `<details class="point-history" open><summary>${t("Historial de cultivos de este punto", "Crop history for this point")}</summary>${historyEditor({ history: state.pointHistory })}</details>` : p && !p.bbox ? `<p class="notice">${t("Edita esta parcela antigua y delimita un área para poder analizarla. Su historial se conserva.", "Edit this legacy plot and define an area before analysing it. Its history is preserved.")}</p>` : ""}
+ ${!isRec ? `<section class="iac-actions"><button class="primary-button" data-analyse="iac" ${!enabled || state.busy || !state.cropId || historicalDateError() ? "disabled" : ""}>${t("Obtener IAC", "Get IAC")} ${I("arrow")}</button>${iacLegend()}<p id="historical-date-error" class="form-error" role="alert">${historicalDateError()}</p></section>` : `<div class="analysis-actions">${recButton}</div>`}
  ${p ? `<section class="parcel-recommendations"><h3>${t("Recomendaciones de cultivos", "Crop recommendations")}</h3>${recButton}${recommendationDates("rec-")}<p class="period-note">${t("Rango propio de plantación, desde mañana. Mayor IAC medio primero. Escenario basado en 2025, no un pronóstico.", "Separate planting range, starting tomorrow. Highest mean IAC first. Scenario based on 2025, not a forecast.")}</p></section>` : ""}<div id="results" aria-live="polite">${resultPanel()}</div></aside>`;
 }
 function historyEditor(d) {
@@ -291,13 +313,13 @@ function historyEditor(d) {
 }
 function parcelEditor() {
   const d = state.draft;
-  return `<section class="card parcel-editor"><h2>${d.id ? t("Editar parcela", "Edit plot") : t("Crear parcela", "Create plot")}</h2><p>${t("Elige un punto o un área rectangular en el mapa y asigna un nombre.", "Choose a point or a rectangular area on the map and give it a name.")}</p><form id="parcel-form"><label class="field">${t("Nombre de la parcela", "Plot name")}<input id="parcel-name" required maxlength="80" value="${esc(d.name)}"></label><div id="draft-location" class="notice">${d.point || d.bbox ? esc(placeText(d)) : t("Selecciona la ubicación en el mapa.", "Select a location on the map.")}</div>${historyEditor(d)}<div class="analysis-actions"><button class="primary-button" type="submit" ${!state.catalog.length ? "disabled" : ""}>${t("Guardar parcela", "Save plot")}</button><button class="muted-button" id="cancel-parcel" type="button">${t("Cancelar", "Cancel")}</button></div><p class="form-error" id="parcel-error" role="alert"></p></form></section>`;
+  return `<section class="card parcel-editor"><h2>${d.id ? t("Editar parcela", "Edit plot") : t("Crear parcela", "Create plot")}</h2><p>${t("Delimita un área rectangular dentro de Ghana y asigna un nombre.", "Define a rectangular area within Ghana and give it a name.")}</p><form id="parcel-form"><label class="field">${t("Nombre de la parcela", "Plot name")}<input id="parcel-name" required maxlength="80" value="${esc(d.name)}"></label><div id="draft-location" class="notice">${d.point || d.bbox ? esc(placeText(d)) : t("Selecciona la ubicación en el mapa.", "Select a location on the map.")}</div>${historyEditor(d)}<div class="analysis-actions"><button class="primary-button" type="submit" ${!state.catalog.length ? "disabled" : ""}>${t("Guardar parcela", "Save plot")}</button><button class="muted-button" id="cancel-parcel" type="button">${t("Cancelar", "Cancel")}</button></div><p class="form-error" id="parcel-error" role="alert"></p></form></section>`;
 }
 function parcelList() {
   return `<div class="parcel-toolbar"><p>${parcels.length} ${t("parcelas guardadas en este navegador", "plots saved in this browser")}</p><button class="primary-button" id="new-parcel" ${state.draft || !state.catalog.length ? "disabled" : ""}>+ ${t("Crear parcela", "Create plot")}</button></div>${parcels.length ? `<div class="parcel-list">${parcels.map((p) => `<button class="parcel-item ${state.selectedParcel === p.id ? "selected" : ""}" data-parcel="${esc(p.id)}" ${state.draft ? "disabled" : ""}><strong>${esc(p.name)}</strong><small>${esc(placeText(p))}</small></button>`).join("")}</div>` : `<div class="empty">${t("Crea tu primera parcela para guardar su ubicación e historial.", "Create your first plot to save its location and history.")}</div>`}${activeParcel() && !state.draft ? `<div class="parcel-tools"><span>${t("Historial previo", "Previous history")}: ${activeParcel().history.map(cropLabel).map(esc).join(" → ") || "—"}</span><button class="muted-button" id="edit-parcel">${t("Editar", "Edit")}</button><button class="muted-button danger" id="delete-parcel">${t("Eliminar", "Delete")}</button></div>` : ""}`;
 }
 function sources() {
-  return `<div class="source-grid"><section class="card view-panel"><h2>${t("API y catálogo", "API and catalogue")}</h2><p>${t("Los selectores se cargan de GET /cultivos, generado desde cultivos.json. Los análisis usan POST /predecir, con IDs numéricos y coordenadas [latitud, longitud].", "Selectors load from GET /cultivos, generated from cultivos.json. Analyses use POST /predecir, with numeric IDs and [latitude, longitude] coordinates.")}</p><a href="/docs" target="_blank" rel="noopener">${t("Documentación de la API", "API documentation")} ↗</a></section><section class="card view-panel"><h2>${t("Clima y suelo", "Climate and soil")}</h2><p>NASA POWER · SMAP · SoilGrids · Google Earth Engine.</p><p>${t("Se requieren credenciales de Earth Engine en el servidor. La interfaz informa de los errores de configuración, datos incompletos o fuentes externas.", "Earth Engine credentials are required on the server. The interface reports configuration, incomplete-data and external-source errors.")}</p></section><section class="card view-panel"><h2>${t("Mapa y parcelas", "Map and plots")}</h2><p>Leaflet 1.9.4 · © OpenStreetMap contributors.</p><p>${t("Las parcelas se guardan en este navegador, sin sincronización por cuenta. Una parcela puede ser un punto representativo o una caja rectangular; no son límites catastrales. En áreas, POWER usa el centro y SMAP/SoilGrids promedian la caja.", "Plots are saved in this browser, without account sync. A plot can be a representative point or a rectangular box; these are not cadastral boundaries. For areas, POWER uses the centre and SMAP/SoilGrids average the box.")}</p></section><section class="card view-panel"><h2>${t("Alcance del análisis", "Scope of analysis")}</h2><p>${t("El IAC es un índice heurístico, no un rendimiento garantizado. Las recomendaciones repiten el patrón mensual observado en 2025 y usan una búsqueda aproximada. La API responde en el idioma seleccionado (ES/EN). El acceso es de demostración y no autentica usuarios.", "IAC is a heuristic index, not a guaranteed yield. Recommendations repeat the monthly pattern observed in 2025 and use an approximate search. The API responds in the selected language (ES/EN). Access is a demonstration and does not authenticate users.")}</p></section></div>`;
+  return `<div class="source-grid">${economicsSources()}<section class="card view-panel"><h2>${t("API y catálogo", "API and catalogue")}</h2><p>${t("Los selectores se cargan de GET /cultivos, generado desde cultivos.json. Los análisis usan POST /predecir, con IDs numéricos y coordenadas [latitud, longitud].", "Selectors load from GET /cultivos, generated from cultivos.json. Analyses use POST /predecir, with numeric IDs and [latitude, longitude] coordinates.")}</p><a href="/docs" target="_blank" rel="noopener">${t("Documentación de la API", "API documentation")} ↗</a></section><section class="card view-panel"><h2>${t("Clima y suelo", "Climate and soil")}</h2><p>NASA POWER · SMAP · SoilGrids · Google Earth Engine.</p><p>${t("Se requieren credenciales de Earth Engine en el servidor. La interfaz informa de los errores de configuración, datos incompletos o fuentes externas.", "Earth Engine credentials are required on the server. The interface reports configuration, incomplete-data and external-source errors.")}</p></section><section class="card view-panel"><h2>${t("Mapa y parcelas", "Map and plots")}</h2><p>Leaflet 1.9.4 · © OpenStreetMap contributors.</p><p>${t("Las parcelas se guardan en este navegador, sin sincronización por cuenta. Las parcelas son áreas rectangulares dentro de Ghana; no son límites catastrales. En áreas, POWER usa el centro y SMAP/SoilGrids promedian la caja.", "Plots are saved in this browser, without account sync. Plots are rectangular areas within Ghana; these are not cadastral boundaries. For areas, POWER uses the centre and SMAP/SoilGrids average the box.")}</p></section><section class="card view-panel"><h2>${t("Alcance del análisis", "Scope of analysis")}</h2><p>${t("El IAC es un índice heurístico, no un rendimiento garantizado. Las recomendaciones repiten el patrón mensual observado en 2025 y usan una búsqueda aproximada. La API responde en el idioma seleccionado (ES/EN). El acceso es de demostración y no autentica usuarios.", "IAC is a heuristic index, not a guaranteed yield. Recommendations repeat the monthly pattern observed in 2025 and use an approximate search. The API responds in the selected language (ES/EN). Access is a demonstration and does not authenticate users.")}</p></section></div>`;
 }
 function layout() {
   const item = navItems.find((n) => n[0] === state.view);
@@ -327,40 +349,40 @@ function updateResults() {
         (b.disabled =
           state.busy ||
           !state.catalog.length ||
-          !(state.view === "parcels" ? activeParcel() : state.point) ||
+          !(state.view === "parcels"
+            ? activeParcel()?.bbox && boxInGhana(activeParcel().bbox)
+            : state.point && inGhana(state.point)) ||
           !!state.draft ||
-          (b.dataset.analyse === "iac" && !state.cropId) ||
+          (b.dataset.analyse === "iac" &&
+            (!state.cropId || !!historicalDateError())) ||
           (b.dataset.analyse === "rotaciones" && !!recommendationDateError())),
     );
+  attachEconomics();
+  const dateError = $("#historical-date-error");
+  if (dateError) dateError.textContent = historicalDateError();
   $("#cancel-query")?.addEventListener("click", () => {
     cancelResult();
     updateResults();
   });
 }
 function setPoint(point, { pan = false } = {}) {
-  if (!validPoint(point)) return;
-  state.point = point;
-  cancelResult();
-  if (state.draft) {
-    const wasBox = state.selection === "bbox";
-    state.draft.point = [...point];
-    state.draft.bbox = null;
-    state.firstCorner = null;
-    state.selection = "point";
-    if (wasBox) render();
-    $("#draft-location").textContent = placeText(state.draft);
-  } else if (state.view === "parcels") {
-    state.selectedParcel = null;
-    render();
+  if (!validPoint(point) || !inGhana(point)) {
+    ghanaWarning();
     return;
   }
+  if (state.view === "parcels") {
+    if (pan) map?.setView(point, Math.max(map.getZoom(), 12));
+    return;
+  }
+  state.point = point;
+  cancelResult();
   drawLocation();
   const label = $("#point-label");
   if (label) label.textContent = coordText(point);
   const f = $("#coordinates");
   if (f) {
-    f.elements.lat.value = point[0];
-    f.elements.lon.value = point[1];
+    f.elements.lat.value = truncated(point[0], 5);
+    f.elements.lon.value = truncated(point[1], 5);
   }
   if (pan) map?.setView(point, Math.max(map.getZoom(), 12));
   updateResults();
@@ -384,7 +406,7 @@ function drawLocation() {
       ],
       { color: "#245844", weight: 2 },
     ).addTo(map);
-  else if (p?.point || state.point)
+  else if (state.view !== "parcels" && state.point)
     marker = L.circleMarker(p?.point || state.point, {
       radius: 9,
       color: "#fff",
@@ -403,6 +425,10 @@ function initMap() {
     state.point || [9.4, -0.84],
     state.point ? 11 : 7,
   );
+  L.geoJSON(GHANA_BOUNDARY, {
+    interactive: false,
+    style: { color: "#245844", weight: 2, fillOpacity: 0.04 },
+  }).addTo(map);
   const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution:
@@ -418,10 +444,15 @@ function initMap() {
   });
   map.on("click", (e) => {
     const point = [
-      Number(e.latlng.lat.toFixed(6)),
-      Number(e.latlng.wrap().lng.toFixed(6)),
+      e.latlng.lat,
+      Math.abs(e.latlng.lng) <= 180 ? e.latlng.lng : e.latlng.wrap().lng,
     ];
-    if (state.draft && state.selection === "bbox") {
+    if (state.view === "parcels" && !state.draft) return;
+    if (!inGhana(point)) {
+      ghanaWarning();
+      return;
+    }
+    if (state.draft) {
       if (!state.firstCorner) {
         state.firstCorner = point;
         state.draft.point = null;
@@ -435,7 +466,9 @@ function initMap() {
           "Selecciona la segunda esquina.",
           "Select the second corner.",
         );
-        L.circleMarker(point, { radius: 4 }).addTo(map);
+        marker = L.circleMarker(point, { radius: 4, interactive: false }).addTo(
+          map,
+        );
         return;
       }
       const a = state.firstCorner,
@@ -451,6 +484,10 @@ function initMap() {
           "El área debe tener ancho y alto.",
           "The area must have width and height.",
         );
+        return;
+      }
+      if (!boxInGhana(box)) {
+        ghanaWarning();
         return;
       }
       state.draft.bbox = box;
@@ -540,8 +577,29 @@ async function analyse(action) {
         ? { point: [...state.point] }
         : null;
   const [start, end] = ranges(action);
+  if (state.view === "parcels" && !p?.bbox) {
+    state.error = t(
+      "Delimita un área para esta parcela.",
+      "Define an area for this plot.",
+    );
+    updateResults();
+    return;
+  }
+  if (
+    location &&
+    !(location.bbox ? boxInGhana(location.bbox) : inGhana(location.point))
+  ) {
+    ghanaWarning();
+    updateResults();
+    return;
+  }
   if (!location) {
     state.error = t("Selecciona una ubicación.", "Select a location.");
+    updateResults();
+    return;
+  }
+  if (action === "iac" && historicalDateError()) {
+    state.error = historicalDateError();
     updateResults();
     return;
   }
@@ -574,7 +632,7 @@ async function analyse(action) {
     updateResults();
     return;
   }
-  const history = [...(p?.history || [])];
+  const history = [...(p?.history || state.pointHistory)];
   const payload = {
     start_date: start,
     end_date: end,
@@ -587,6 +645,7 @@ async function analyse(action) {
       : { n_recomendaciones: state.recCount || 3 }),
   };
   const context = {
+    areaHa: location.bbox ? hectares(location.bbox) : null,
     name: p?.name || t("Punto seleccionado", "Selected point"),
     location: location.bbox
       ? `BBOX · ${coordText(location.bbox)}`
@@ -634,11 +693,12 @@ function startDraft(p = null) {
     ? structuredClone(p)
     : {
         name: "",
-        point: state.point ? [...state.point] : null,
+        point: null,
         bbox: null,
         history: [],
       };
-  state.selection = p?.bbox ? "bbox" : "point";
+  state.draft.point = null;
+  state.selection = "bbox";
   state.firstCorner = null;
   render();
 }
@@ -810,7 +870,7 @@ function attach() {
     (e) => (state.draft.name = e.target.value),
   );
   $("#add-history")?.addEventListener("click", () => {
-    if (state.draft.history.length >= 100) {
+    if (editableHistory().length >= 100) {
       toast(
         "El historial admite hasta 100 cultivos.",
         "History allows up to 100 crops.",
@@ -819,13 +879,15 @@ function attach() {
     }
     const id = +$("#history-crop").value;
     if (!state.catalog.some((c) => c.id === id)) return;
-    state.draft.history.push(id);
+    editableHistory().push(id);
+    cancelResult();
     render();
   });
   document.querySelectorAll("[data-remove-history]").forEach(
     (el) =>
       (el.onclick = () => {
-        state.draft.history.splice(+el.dataset.removeHistory, 1);
+        editableHistory().splice(+el.dataset.removeHistory, 1);
+        cancelResult();
         render();
       }),
   );
@@ -834,12 +896,12 @@ function attach() {
     const d = state.draft;
     if (
       !d.name.trim() ||
-      !(validPoint(d.point) || validBox(d.bbox)) ||
+      !boxInGhana(d.bbox) ||
       !d.history.every((id) => state.catalog.some((c) => c.id === id))
     ) {
       $("#parcel-error").textContent = t(
-        "Revisa el nombre, la ubicación y el historial.",
-        "Check the name, location and history.",
+        "Revisa el nombre, el área dentro de Ghana y el historial.",
+        "Check the name, the area within Ghana and the history.",
       );
       return;
     }
@@ -904,6 +966,9 @@ function attach() {
     cancelResult();
     render();
   });
+  attachEconomics();
+  const dateError = $("#historical-date-error");
+  if (dateError) dateError.textContent = historicalDateError();
   $("#cancel-query")?.addEventListener("click", () => {
     cancelResult();
     updateResults();
