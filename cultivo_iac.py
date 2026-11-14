@@ -3,11 +3,10 @@ from dataclasses import dataclass
 @dataclass
 class Cultivo:
     # Identificación
-    id: str
+    id: int
     nombre: str
     nombre_cientifico: str
     familia: str
-    tipo_ciclo: str
     duracion_ciclo_dias: int
 
     # 1. Temperatura media (°C), la temp que sería ideal
