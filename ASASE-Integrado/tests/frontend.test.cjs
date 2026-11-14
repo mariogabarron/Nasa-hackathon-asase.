@@ -30,6 +30,9 @@ function bridge(url, options = {}) {
 const catalogue = bridge("/cultivos");
 async function setup({
   stored,
+  storedLanguage = "es",
+  storedBudgets,
+  readBlocked = false,
   brokenCatalog = false,
   storageBlocked = false,
 } = {}) {
@@ -55,6 +58,13 @@ async function setup({
   w.AbortController = AbortController;
   w.confirm = () => true;
   if (stored) w.localStorage.setItem("asase.parcels.v3", stored);
+  if (storedLanguage !== null)
+    w.localStorage.setItem("asase.language", storedLanguage);
+  if (storedBudgets) w.localStorage.setItem("asase.budgets.v1", storedBudgets);
+  if (readBlocked)
+    w.Storage.prototype.getItem = () => {
+      throw new Error("blocked");
+    };
   if (storageBlocked)
     w.Storage.prototype.setItem = () => {
       throw new Error("quota");
@@ -100,6 +110,7 @@ async function setup({
     "base.js",
     "data/ghana.js",
     "geo.js",
+    "data/economic-references.js",
     "economics.js",
     "analysis-ui.js",
     "app.js",
@@ -275,7 +286,8 @@ test("Economía: pérdidas, ciclos repetidos, área, campos ausentes y no conver
       calc([{ cultivo_id: 7, dias: 115 }], undefined, 2).margin,
       477.4,
     );
-    assert.equal(calc([{ cultivo_id: 12, dias: 80 }]).margin, null);
+    assert.equal(calc([{ cultivo_id: 12, dias: 80 }]).margin, -0.25);
+    assert.equal(calc([{ cultivo_id: 99, dias: 80 }]).margin, null);
     assert.equal(calc([{ cultivo_id: 7, dias: 20 }]).margin, null);
     assert.equal(calc([{ tipo: "barbecho", dias: 10 }]).margin, null);
     assert.equal(
@@ -321,6 +333,12 @@ test("Cada recomendación muestra beneficio o datos pendientes; presupuesto edit
       q.w.document.querySelector(".economic-result").textContent,
       /238.7 GHS\/ha/,
     );
+    assert.match(
+      q.w.document.querySelectorAll(".economic-result")[1].textContent,
+      /-0.25 GHS/,
+    );
+    q.fill('[data-budget-crop="12"][data-budget-field="revenue"]', "");
+    q.submit("#economic-budget");
     assert.match(
       q.w.document.querySelectorAll(".economic-result")[1].textContent,
       /Completa/,
@@ -840,6 +858,180 @@ test("Cambio a inglés limpia resultados previos y pide razones y planes en ingl
       .join(" ");
     assert.match(text, /Proposal/);
     assert.ok(!text.includes("cultivos"));
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("EN por defecto, valores desconocidos y almacenamiento bloqueado; conserva elección ES/EN", async () => {
+  for (const config of [
+    { storedLanguage: null },
+    { storedLanguage: "xx" },
+    { storedLanguage: "en" },
+    { storedLanguage: "es", readBlocked: true },
+    { storedLanguage: "es" },
+  ]) {
+    const q = await setup(config);
+    try {
+      const expected =
+        config.storedLanguage === "es" && !config.readBlocked ? "es" : "en";
+      assert.equal(q.eval("language"), expected);
+      assert.equal(q.w.document.documentElement.lang, expected);
+      assert.match(
+        q.w.document.body.textContent,
+        expected === "en" ? /Welcome/ : /Bienvenido/,
+      );
+      q.click("[data-demo]");
+      mapClick(q);
+      q.click('[data-analyse="iac"]');
+      await q.tick();
+      assert.equal(JSON.parse(q.calls.at(-1).body).language, expected);
+    } finally {
+      q.dom.window.close();
+    }
+  }
+});
+
+test("12 cultivos con presupuesto completo, referencias por cultivo y advertencia externa de guisante", async () => {
+  const q = await setup({ storedLanguage: null });
+  try {
+    assert.equal(q.eval("Object.keys(ECON_REFERENCES).length"), 12);
+    assert.equal(
+      q.eval(
+        "state.catalog.every(c=>estimateEconomics({rotacion:[{cultivo_id:c.id,dias:c.duracion_ciclo_dias}]},state.budgets,state.catalog).complete)",
+      ),
+      true,
+    );
+    q.click("[data-demo]");
+    q.click('[data-view="recommendations"]');
+    mapClick(q);
+    q.w.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        recomendaciones: [
+          {
+            iac_medio_cultivado: 75,
+            dias_cultivados: 90,
+            rotacion: [{ cultivo_id: 10, dias: 90 }],
+          },
+        ],
+      }),
+    });
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    assert.match(
+      q.w.document.querySelector(".economic-result").textContent,
+      /Australian reference/,
+    );
+    assert.match(
+      q.w.document.querySelector(".economic-result").textContent,
+      /5566.92 GHS/,
+    );
+    q.click('[data-view="sources"]');
+    assert.equal(
+      q.w.document.querySelectorAll(".economic-table tbody tr").length,
+      12,
+    );
+    assert.match(q.w.document.body.textContent, /1.442/);
+    assert.match(
+      q.w.document.body.textContent,
+      /without economic validation in Ghana/,
+    );
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Presupuestos persisten al recargar; cero y vacío son distintos; datos corruptos usan referencias", async () => {
+  const q = await setup();
+  let stored;
+  try {
+    q.click("[data-demo]");
+    q.click('[data-view="recommendations"]');
+    mapClick(q);
+    q.w.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        recomendaciones: [
+          {
+            iac_medio_cultivado: 75,
+            dias_cultivados: 80,
+            rotacion: [{ cultivo_id: 12, dias: 80 }],
+          },
+        ],
+      }),
+    });
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    q.fill('[data-budget-crop="12"][data-budget-field="revenue"]', "0");
+    q.fill('[data-budget-crop="12"][data-budget-field="cost"]', "15.25");
+    q.submit("#economic-budget");
+    stored = q.w.localStorage.getItem("asase.budgets.v1");
+    assert.deepEqual(JSON.parse(stored)["12"], { revenue: 0, cost: 15.25 });
+    assert.match(
+      q.w.document.querySelector(".economic-result").textContent,
+      /-15.25/,
+    );
+  } finally {
+    q.dom.window.close();
+  }
+  const reloaded = await setup({ storedBudgets: stored });
+  try {
+    assert.equal(reloaded.eval("state.budgets[12].revenue"), 0);
+    assert.equal(reloaded.eval("state.budgets[12].cost"), 15.25);
+  } finally {
+    reloaded.dom.window.close();
+  }
+  for (const bad of [
+    "not json",
+    "[]",
+    '{"12":{"revenue":-1,"cost":5},"99":{"revenue":7,"cost":8}}',
+  ]) {
+    const r = await setup({ storedBudgets: bad });
+    try {
+      assert.equal(r.eval("state.budgets[12].revenue"), 541.07);
+      assert.equal(r.eval("Object.keys(state.budgets).length"), 12);
+    } finally {
+      r.dom.window.close();
+    }
+  }
+  const blank = await setup({
+    storedBudgets: '{"12":{"revenue":null,"cost":5}}',
+  });
+  try {
+    assert.equal(blank.eval("state.budgets[12].revenue"), null);
+  } finally {
+    blank.dom.window.close();
+  }
+});
+
+test("Fallo al guardar presupuesto mantiene resultado y muestra aviso", async () => {
+  const q = await setup({ storageBlocked: true });
+  try {
+    q.click("[data-demo]");
+    q.click('[data-view="recommendations"]');
+    mapClick(q);
+    q.w.fetch = async () => ({
+      ok: true,
+      json: async () => ({
+        recomendaciones: [
+          {
+            iac_medio_cultivado: 75,
+            dias_cultivados: 80,
+            rotacion: [{ cultivo_id: 12, dias: 80 }],
+          },
+        ],
+      }),
+    });
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    q.fill('[data-budget-crop="12"][data-budget-field="revenue"]', "1000");
+    q.submit("#economic-budget");
+    assert.equal(q.eval("state.budgets[12].revenue"), 1000);
+    assert.match(
+      q.w.document.querySelector(".toast").textContent,
+      /solo está en memoria/,
+    );
   } finally {
     q.dom.window.close();
   }

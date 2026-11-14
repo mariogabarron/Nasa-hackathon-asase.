@@ -202,9 +202,9 @@ const translationPairs = Object.entries(englishTranslations).sort(
 );
 let language = (() => {
   try {
-    return localStorage.getItem("asase.language") === "en" ? "en" : "es";
+    return localStorage.getItem("asase.language") === "es" ? "es" : "en";
   } catch {
-    return "es";
+    return "en";
   }
 })();
 function translateString(input) {

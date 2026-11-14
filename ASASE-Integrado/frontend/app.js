@@ -93,7 +93,7 @@ const state = {
   cropId: null,
   point: null,
   pointHistory: [],
-  budgets: structuredClone(ECON_REFERENCES),
+  budgets: loadBudgets(),
   range: [...initialRange],
   recRange: futureRange(),
   parcelRecRange: futureRange(),

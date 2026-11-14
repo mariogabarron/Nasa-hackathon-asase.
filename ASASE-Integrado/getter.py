@@ -5,9 +5,11 @@
     En BBOX, POWER representa el centro; SMAP/SoilGrids promedian el área.
 """
 from datetime import timedelta
+import json
 import logging
 import math
 import os
+from pathlib import Path
 from threading import Lock
 
 import numpy as np
@@ -65,6 +67,33 @@ def clasificar_textura_usda(arcilla, limo, arena):
     return "Franca (Loam)"
 
 
+def cargar_cuenta_servicio():
+    """Lee el secreto solo en el servidor; el JSON en memoria tiene prioridad."""
+    contenido = os.environ.get("GEE_SERVICE_ACCOUNT_JSON")
+    archivo = os.environ.get("GEE_SERVICE_ACCOUNT_FILE")
+    if contenido is None and archivo is None:
+        return None
+    if contenido is None:
+        try:
+            contenido = Path(archivo).read_text(encoding="utf-8-sig")
+        except (OSError, ValueError):
+            raise ErrorConfiguracion("No se pudo leer GEE_SERVICE_ACCOUNT_FILE.") from None
+    try:
+        cuenta = json.loads(contenido)
+    except (ValueError, TypeError):
+        raise ErrorConfiguracion("GEE_SERVICE_ACCOUNT_JSON debe contener el JSON completo de Google Cloud, sin comillas adicionales ni Base64.") from None
+    if not isinstance(cuenta, dict) or cuenta.get("type") != "service_account":
+        raise ErrorConfiguracion("El JSON de Google Cloud debe ser de tipo service_account.")
+    requeridos = ("project_id", "private_key_id", "private_key", "client_email", "token_uri")
+    faltan = [campo for campo in requeridos if not isinstance(cuenta.get(campo), str) or not cuenta[campo].strip()]
+    if faltan:
+        raise ErrorConfiguracion("Faltan campos en el JSON de Google Cloud: " + ", ".join(faltan))
+    # No permitir un destino de intercambio de tokens distinto al de Google.
+    if cuenta["token_uri"] != "https://oauth2.googleapis.com/token":
+        raise ErrorConfiguracion("token_uri debe ser https://oauth2.googleapis.com/token; utiliza el JSON original de Google Cloud.")
+    return cuenta
+
+
 def inicializar_ee():
     """Inicializa una vez; nunca abre un login interactivo dentro de la API."""
     global _EE
@@ -75,13 +104,19 @@ def inicializar_ee():
             import ee
         except ImportError as exc:
             raise ErrorConfiguracion("Instalar earthengine-api con requirements.txt") from exc
-        proyecto = os.environ.get("GEE_PROJECT_ID", "gen-lang-client-0182377274")
+        cuenta = cargar_cuenta_servicio()
+        proyecto = os.environ.get("GEE_PROJECT_ID", "").strip() or (cuenta["project_id"] if cuenta else None)
         try:
-            ee.Initialize(project=proyecto)
+            if cuenta is not None:
+                credenciales = ee.ServiceAccountCredentials(key_data=json.dumps(cuenta))
+                ee.Initialize(credentials=credenciales, project=proyecto)
+            else:
+                # Conserva la autenticación local/ADC cuando no hay JSON configurado.
+                ee.Initialize(project=proyecto)
             ee.data.setDeadline(120_000)
         except Exception as exc:
             LOG.warning("No se pudo inicializar Earth Engine (%s)", type(exc).__name__)
-            raise ErrorConfiguracion("Earth Engine no está autorizado. Configurar GEE_PROJECT_ID y credenciales antes de arrancar el servidor.") from exc
+            raise ErrorConfiguracion("Earth Engine no está autorizado. Revisa GEE_SERVICE_ACCOUNT_JSON, GEE_PROJECT_ID y el acceso del proyecto a Earth Engine.") from None
         _EE = ee
         return ee
 

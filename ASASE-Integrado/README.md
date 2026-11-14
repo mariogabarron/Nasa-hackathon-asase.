@@ -37,11 +37,35 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
 En PowerShell, establece el proyecto con `$env:GEE_PROJECT_ID="TU_PROYECTO_GOOGLE_CLOUD"`.
-El getter original conserva su proyecto predeterminado; configura expresamente el tuyo si no tienes acceso a ese proyecto. No se incluyen credenciales ni se solicitan en el frontend. Puedes comprobar las fuentes con `python comprobar_fuentes.py` después de configurar el servidor.
+Configura tu propio proyecto; ya no se utiliza el proyecto fijo del getter original. No se incluyen credenciales ni se solicitan en el frontend. Puedes comprobar las fuentes con `python comprobar_fuentes.py` después de configurar el servidor.
+
+### Credenciales de Google Earth Engine en Vercel
+
+1. Usa el **JSON completo de una clave de cuenta de servicio** descargado de Google Cloud (IAM y administración → Cuentas de servicio → tu cuenta → Claves → Añadir clave → JSON). Debe incluir `type`, `project_id`, `private_key_id`, `private_key`, **`client_email` y `token_uri`**; conserva también los demás campos del archivo original. Los cuatro primeros campos por sí solos no bastan.
+2. En tu proyecto de Vercel, abre **Settings → Environment Variables**. Crea **`GEE_SERVICE_ACCOUNT_JSON`** y pega como valor todo el contenido del archivo, desde `{` hasta `}`. No pegues su nombre/ruta, no lo conviertas a Base64 ni añadas comillas alrededor del objeto. Conserva los `\n` de `private_key` tal como aparecen en el JSON: el backend los interpreta al leerlo.
+3. Aplica la variable a **Production** y también a **Preview** si vas a consultar datos desde despliegues de prueba. Guárdala como secreto si está disponible esa opción. El backend toma el proyecto de `project_id`; solo añade **`GEE_PROJECT_ID`** si quieres usar otro proyecto con permisos para esa cuenta.
+4. Despliega este código actualizado y ejecuta **Redeploy** después de guardar/cambiar variables. No hace falta ejecutar `earthengine authenticate` en Vercel ni guardar un archivo de credenciales allí.
+5. Haz una consulta histórica de IAC desde el mapa para verificar el acceso real. `/health` solo comprueba que la aplicación responde; no verifica Earth Engine.
+
+El proyecto debe estar registrado para Earth Engine, tener habilitada la Earth Engine API y permitir el acceso de la cuenta de servicio. Para las consultas, revisa el rol **Earth Engine Resource Viewer** y, cuando corresponda, **Service Usage Consumer**. Una clave válida no sustituye esos permisos.
+
+El secreto se lee únicamente en Python, permanece en memoria y no se devuelve al navegador ni se escribe en archivos temporales. No lo pongas en `frontend/`, en `vercel.json` ni en variables con prefijos públicos (`NEXT_PUBLIC_`, `VITE_`). No subas la clave al repositorio. Los errores de configuración no muestran el contenido del JSON o la clave privada.
+
+Para usar el mismo JSON **en local**, guárdalo fuera de `frontend/`, por ejemplo en `secrets/earthengine-key.json` (carpeta ignorada por Git):
+
+```bash
+export GEE_SERVICE_ACCOUNT_FILE="$PWD/secrets/earthengine-key.json"
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+En PowerShell: `$env:GEE_SERVICE_ACCOUNT_FILE="$PWD/secrets/earthengine-key.json"`.
+Prioridad: `GEE_SERVICE_ACCOUNT_JSON` → `GEE_SERVICE_ACCOUNT_FILE` → autenticación local/ADC existente. Si se define un secreto vacío o inválido, se informa del error y no se cambia silenciosamente a otra cuenta. Las credenciales se inicializan una vez por proceso; reinicia el servidor local o vuelve a desplegar al cambiarlas. La aplicación no carga archivos `.env` automáticamente.
+
+Referencias oficiales: [cuentas de servicio de Earth Engine](https://developers.google.com/earth-engine/guides/service_account) y [variables de entorno de Vercel](https://vercel.com/docs/environment-variables/managing-environment-variables).
 
 ## Pantallas
 
-- **Inicio de sesión:** se conserva la pantalla original y su acceso de demostración, con ES/EN. No autentica usuarios: no envía ni guarda contraseñas. No protege los endpoints ni los registros locales.
+- **Inicio de sesión:** se conserva la pantalla original y su acceso de demostración, con EN como idioma inicial y selector ES/EN. Se respeta una elección anterior guardada. No autentica usuarios: no envía ni guarda contraseñas. No protege los endpoints ni los registros locales.
 - **Mapa:** histórico con fechas pasadas (hasta ayer), selector de nombres cargados desde `cultivos.json` a través de `/cultivos`, ordenado alfabéticamente en ES/EN, sin IDs visibles y con buscador (ignora acentos), mapa Leaflet con zoom, autolocalización y selección al pulsar. El panel derecho permite obtener el IAC del cultivo seleccionado. También se pueden introducir coordenadas manualmente y añadir un historial de cultivos previo. Se puede navegar por el mapamundi; solo se aceptan selecciones dentro del polígono de Ghana.
 - **Recomendaciones:** selección de punto, fechas de plantación desde mañana y entre una y cinco propuestas. Las propuestas devueltas se muestran por IAC medio descendente, con días cultivados como desempate y nulos al final. Muestra las secuencias devueltas por la API, IAC de cada ciclo, fechas, ocupación y supuestos. Permite añadir historial previo y consultar el beneficio económico estimado de cada propuesta con presupuesto suficiente. No inventa recomendaciones cuando la API falla.
 - **Parcelas:** crear, seleccionar, editar y eliminar parcelas; dibujar un rectángulo pulsando dos esquinas opuestas, completamente dentro de Ghana. No hay selector ni formulario de puntos en esta página. Cada parcela guarda su nombre, ubicación e historial ordenado; no existe un cultivo actual/plantado. El cultivo elegido en el selector superior sirve solo para calcular un IAC. El botón de recomendaciones está en una sección separada y tiene sus propias fechas debajo, independientes de las del IAC.
@@ -75,9 +99,11 @@ Los IAC individuales, medios de propuesta y de cada ciclo se colorean en rojo pa
 
 Los valores visibles se truncan hacia cero: dos decimales como máximo para IAC, porcentajes, importes y superficies, y cinco para coordenadas. No se añaden ceros a enteros. Se conserva la precisión interna para consultas, cálculos y ordenación.
 
-Cada propuesta incluye beneficio estimado, entendido como **margen antes de costes fijos**, en GHS/ha para puntos y en GHS totales para parcelas. Se suman ingresos menos costes variables de cada ciclo completo, sin ajustar el rendimiento por IAC. El presupuesto puede modificarse sin repetir la consulta climática. Se mantiene en memoria durante la sesión.
+Cada propuesta incluye beneficio estimado, entendido como **margen antes de costes fijos**, en GHS/ha para puntos y en GHS totales para parcelas. Se suman ingresos menos costes variables de cada ciclo completo, sin ajustar el rendimiento por IAC. El presupuesto puede modificarse sin repetir la consulta climática. Los ajustes se guardan en `localStorage` (`asase.budgets.v1`) y se recuperan al recargar, sin sincronización entre dispositivos. Si el navegador impide guardar, se avisa y se mantienen solo en memoria.
 
-Referencias históricas editables: [Adelesi et al. (2023), tabla 4](https://doi.org/10.3390/su15097386), norte de Ghana, para maíz con manejo medio, arroz de secano, soja y cacahuete. **No son precios actuales ni previsiones**. Para los otros cultivos se solicitan ingresos y costes propios; sin datos completos no se presenta una cifra total ficticia. La página **Fuentes** incluye los importes, la procedencia, fechas, licencia y el método del [Ministerio de Finanzas de Ghana (noviembre de 2024, pág. 83)](https://mofep.gov.gh/sites/default/files/news/Methodologies_for_Preparation_and_Integrated_Appraisal_of_Public_Investment_Projects.pdf#page=91).
+Los **12 cultivos tienen ingresos y costes iniciales guardados**, con fuente, año, unidad, tratamiento elegido y conversiones en `frontend/data/economic-references.json`. El script equivalente `.js` carga exactamente esos datos sin peticiones adicionales. La página **Fuentes** presenta la tabla de los 12 cultivos y las referencias individuales.
+
+Los importes son referencias históricas heterogéneas; **no son precios actuales ni previsiones comparables entre cultivos**. Para guisante se utiliza explícitamente un presupuesto de Horsham (Australia), convertido de AUD a GHS con tipos históricos de 2022; no está validado económicamente para Ghana. Las cifras de yuca se convierten de USD/acre a GHS/ha con el tipo de 2020, año de publicación. No se aplica una actualización general por inflación. Consulta `ECONOMIA.md` para los valores y su trazabilidad. Si el usuario borra un campo, el cálculo se bloquea en lugar de sustituirlo por cero.
 
 Se supone que toda el área rectangular se cultiva en cada ciclo; su superficie se aproxima sobre una esfera de radio medio terrestre. El barbecho se supone sin ingresos ni costes variables. No incluye costes fijos, inversión, impuestos, descuento temporal ni ganancia incremental frente a un escenario anterior. Los márgenes negativos se muestran como pérdidas; los ciclos incompletos no se valoran. Las propuestas continúan ordenadas por IAC, no por dinero.
 
@@ -95,7 +121,7 @@ La geometría local proviene de [geoBoundaries gbOpen GHA ADM0](https://www.geob
 - Si el navegador rechaza el almacenamiento, se avisa y los cambios quedan solo en memoria. Una consulta no modifica el historial ni guarda su resultado como observación histórica.
 - Los resultados muestran la ubicación, las fechas, el cultivo y el historial usados. Cambiar esos parámetros invalida el resultado y descarta respuestas tardías. El botón de cancelar detiene la espera del cliente; un cálculo ya iniciado en el servidor puede terminar igualmente.
 - El cliente espera hasta cuatro minutos. Expone errores de validación (422), fuentes/datos (502), configuración (503), red y respuestas inválidas, sin puntuaciones de sustitución.
-- ES/EN se conserva para la interfaz y todos los nombres del catálogo. Las peticiones `/predecir` incluyen `language: "es" | "en"` (español por defecto). La API genera razones, justificaciones, supuestos, avisos y mensajes públicos de error en el idioma solicitado. Las claves JSON/IDs permanecen estables. Al cambiar de idioma se invalidan los resultados anteriores; la siguiente consulta responde en el nuevo idioma. No se usa traducción externa ni se mezcla el idioma entre peticiones concurrentes.
+- **EN es el idioma inicial** si no existe una preferencia válida, incluso si no se puede leer el almacenamiento. Una elección explícita ES/EN anterior se conserva. ES/EN se mantiene para la interfaz y todos los nombres del catálogo. Las peticiones `/predecir` incluyen `language: "es" | "en"` (la API mantiene español cuando un cliente externo omite el campo; el frontend siempre envía el idioma seleccionado). La API genera razones, justificaciones, supuestos, avisos y mensajes públicos de error en el idioma solicitado. Las claves JSON/IDs permanecen estables. Al cambiar de idioma se invalidan los resultados anteriores; la siguiente consulta responde en el nuevo idioma. No se usa traducción externa ni se mezcla el idioma entre peticiones concurrentes.
 
 ## Pruebas
 
@@ -125,7 +151,9 @@ Consulta `VERIFICACION-INTEGRACION.md` para los resultados y las limitaciones ve
 - `frontend/index.html`: entrada de la aplicación.
 - `frontend/base.js`, `original.css`: pantalla de acceso, traducciones, iconos y base visual conservados.
 - `frontend/app.js`, `app.css`: páginas integradas, cliente API, Leaflet y parcelas.
-- `frontend/analysis-ui.js`, `economics.js`: historial, fechas, presupuesto, fuentes y truncado visual.
+- `frontend/analysis-ui.js`, `economics.js`: historial, fechas, presupuesto persistente, fuentes y truncado visual.
+- `frontend/data/economic-references.json`, `.js`: presupuestos documentados para los 12 cultivos.
+- `scripts/build_economic_data.py`: regenera el JS desde el JSON sin alterar las cifras.
 - `frontend/geo.js`, `frontend/data/ghana.*`, `geografia.py`: delimitación compartida de Ghana.
 - `cultivos.json`: catálogo único del backend; no se duplica en el frontend.
 - `getter.py`, `validacion.py`: fuentes y validación originales.

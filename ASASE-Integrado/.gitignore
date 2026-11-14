@@ -3,3 +3,7 @@ node_modules/
 __pycache__/
 *.pyc
 .env
+.env.*
+secrets/
+*-key.json
+service-account*.json

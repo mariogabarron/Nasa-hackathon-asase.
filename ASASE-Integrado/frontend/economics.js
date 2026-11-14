@@ -1,13 +1,34 @@
 "use strict";
-// Adelesi et al. (2023), Table 4, doi:10.3390/su15097386, CC BY 4.0.
-// Historical Northern Ghana budgets: total revenue and total variable cost, GHS/ha/cycle.
-// Maize: medium management. Rice: upland. Do not infer yield from IAC.
-const ECON_REFERENCES = Object.freeze({
-  1: { revenue: 3603.6, cost: 4654.7 },
-  4: { revenue: 6343.5, cost: 4011.2 },
-  5: { revenue: 5062.2, cost: 3570.4 },
-  7: { revenue: 2935, cost: 2696.3 },
-});
+// All catalogue crops have a documented historical budget in GHS/ha/cycle.
+// Pea uses an explicitly labelled external reference, not validated for Ghana.
+const ECON_REFERENCES = Object.freeze(
+  Object.fromEntries(
+    Object.entries(ECONOMIC_DATA.crops).map(([id, c]) => [
+      id,
+      Object.freeze({ revenue: c.revenue, cost: c.cost }),
+    ]),
+  ),
+);
+const BUDGET_STORAGE_KEY = "asase.budgets.v1";
+function loadBudgets() {
+  const result = structuredClone(ECON_REFERENCES),
+    stored = readStore(BUDGET_STORAGE_KEY, {});
+  if (!stored || typeof stored !== "object" || Array.isArray(stored))
+    return result;
+  for (const id of Object.keys(result)) {
+    const b = stored[id];
+    if (
+      b &&
+      [b.revenue, b.cost].every(
+        (v) =>
+          v === null ||
+          (typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1e9),
+      )
+    )
+      result[id] = { revenue: b.revenue, cost: b.cost };
+  }
+  return result;
+}
 // Truncate toward zero at presentation time; preserve calculation and ranking precision.
 function truncated(value, digits = 2) {
   if (typeof value !== "number" || !Number.isFinite(value)) return "—";
