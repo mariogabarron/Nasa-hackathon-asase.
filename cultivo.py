@@ -36,6 +36,3 @@ class Cultivo:
 
     # 10. Carbono orgánico (g/kg)
     suelo_carbono_organico_g_kg: float
-
-    # 11. Textura del suelo
-    suelo_textura_clase: str
