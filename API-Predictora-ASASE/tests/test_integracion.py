@@ -78,7 +78,11 @@ class AgregacionTests(unittest.TestCase):
         for v in [np.nan,np.inf,-999.,-9999.,None,True]:
             df=tabla_ejemplo().astype(object)
             df.iloc[1,df.columns.get_loc('precipitacion_mm')]=v
-            with self.assertRaises(DatosInsuficientes): self.agregar(df)
+            if v is True:
+                with self.assertRaises(DatosInsuficientes): self.agregar(df)
+            else:
+                t,_=self.agregar(df)
+                self.assertIsNone(t.precipitacion_mm)
 
     def test_datos_diarios_invalidos_no_ocultos_por_media(self):
         df=tabla_ejemplo()
@@ -89,7 +93,8 @@ class AgregacionTests(unittest.TestCase):
         df=tabla_ejemplo()
         df.loc[df.index[1],'suelo_textura_clase']='Arcillosa'
         with self.assertRaises(DatosInsuficientes): self.agregar(df)
-        with self.assertRaises(DatosInsuficientes): self.agregar(tabla_ejemplo().drop(columns='temp_min_C'))
+        t,_=self.agregar(tabla_ejemplo().drop(columns='temp_min_C'))
+        self.assertIsNone(t.temp_min_C)
 
     def test_no_filas_subdiarias(self):
         df=tabla_ejemplo()
@@ -253,3 +258,32 @@ class GetterTests(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
+class NulosTests(unittest.TestCase):
+    def test_ph_ausente_http_200(self):
+        df=tabla_ejemplo();df['suelo_ph_0_30cm']=np.nan
+        app.dependency_overrides[proveedor_getter]=lambda:lambda *a:df
+        try:
+            with TestClient(app) as client:
+                r=client.post('/predecir',json=peticion(cultivo_id=1))
+                self.assertEqual(r.status_code,200,r.text)
+                self.assertIn('suelo_ph_0_30cm',r.json()['razon'])
+                self.assertTrue(0<=r.json()['iac']<=100)
+        finally: app.dependency_overrides.clear()
+
+    def test_media_parcial_y_rotacion(self):
+        df=tabla_ejemplo();df.loc[df.index[0],'temp_media_C']=np.nan
+        df['suelo_ph_0_30cm']=np.nan
+        t,_=agregar_tabla(df,'2025-04-01','2025-04-03',point=[9,-1])
+        self.assertEqual(t.temp_media_C,28.5)
+        p=peticion();p['accion']='rotaciones'
+        r=predecir(**p,getter=lambda *a:df)
+        self.assertEqual(r['dias'],365)
+        self.assertTrue(any('ausentes' in a for a in r['supuestos']))
+
+    def test_todo_ausente_no_inventa(self):
+        df=tabla_ejemplo()
+        for k in df.columns:
+            if k!='suelo_textura_clase': df[k]=np.nan
+        with self.assertRaises(DatosInsuficientes):
+            agregar_tabla(df,'2025-04-01','2025-04-03',point=[9,-1])

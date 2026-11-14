@@ -1,3 +1,5 @@
+Actualización: 59 pruebas superadas; caso de pH totalmente nulo probado con tabla controlada y endpoint HTTP. No se ha repetido la descarga real de Earth Engine de la localización indicada.
+
 # Verificación de entrega · 14 de noviembre de 2026
 
 ## Comprobado

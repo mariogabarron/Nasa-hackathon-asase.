@@ -1,3 +1,18 @@
+# Actualización: tolerancia a datos nulos
+
+Los nulos, NaN, infinitos y centinelas se omiten al obtener medias y extremos.
+Si una columna completa falta, se excluye del IAC y se renormalizan los pesos
+restantes. No se imputa un pH ni un carbono supuestos. La razón incluye la
+cobertura diaria, las variables excluidas y la cobertura de pesos original.
+Si falta cualquier día de precipitación, se excluye esa variable: no se
+confunde una suma parcial con el acumulado completo. La rotación sigue
+funcionando, pero declara que los filtros de variables ausentes no se han
+podido verificar. Un IAC parcial alto no acredita aptitud completa.
+Se mantienen errores para tablas sin ninguna variable numérica utilizable,
+fechas incorrectas/duplicadas y valores físicos imposibles.
+Esta política sustituye la política estricta de nulos descrita en la versión
+inicial de abajo. El contrato HTTP y los argumentos se mantienen.
+
 # ASASE · API predictora integrada
 
 Integra el getter proporcionado, la agregación del período y el motor IAC.

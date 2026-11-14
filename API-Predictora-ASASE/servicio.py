@@ -46,8 +46,8 @@ def agregar_tabla(tabla, start_date, end_date, point=None, bbox=None):
     df = df.reindex(esperado)
     requeridas = list(PARAMETROS) + ["suelo_textura_clase"]
     ausentes = set(requeridas) - set(df.columns)
-    if ausentes:
-        raise DatosInsuficientes(f"Faltan columnas: {', '.join(sorted(ausentes))}")
+    for k in ausentes:
+        df[k] = np.nan
     for k in PARAMETROS:
         if df[k].map(lambda v: isinstance(v, (bool, np.bool_))).any():
             raise DatosInsuficientes(f"{k} contiene booleanos")
@@ -55,28 +55,37 @@ def agregar_tabla(tabla, start_date, end_date, point=None, bbox=None):
             df[k] = pd.to_numeric(df[k], errors="raise")
         except (ValueError, TypeError) as exc:
             raise DatosInsuficientes(f"{k} contiene valores no numéricos") from exc
-        if not np.isfinite(df[k].to_numpy(dtype=float)).all() or df[k].isin([-999, -9999]).any():
-            raise DatosInsuficientes(f"{k} contiene valores ausentes/centinela; no se imputan ni se descartan días")
-    texturas = df["suelo_textura_clase"]
+        df[k] = df[k].replace([-999, -9999, np.inf, -np.inf], np.nan)
+    texturas = df["suelo_textura_clase"].fillna("Desconocida")
+    conocidas = texturas[texturas != "Desconocida"]
+    if not conocidas.empty:
+        texturas = texturas.replace("Desconocida", conocidas.iloc[0])
     if not texturas.map(lambda v: isinstance(v, str) and bool(v.strip())).all() or texturas.nunique() != 1:
         raise DatosInsuficientes("La textura debe ser la misma cadena de texto durante todo el período")
     ubicacion = {"point": list(point) if point is not None else None,
                  "bbox": list(bbox) if bbox is not None else None}
     identificador = "parcela-" + hashlib.sha256(json.dumps(ubicacion, sort_keys=True).encode()).hexdigest()[:16]
     metadata = dict(id=identificador, nombre="Parcela consultada", latitud=lat, longitud=lon,
-                    fecha=end_date, suelo_textura_clase=texturas.iloc[0])
+                    fecha=end_date, suelo_textura_clase=texturas.iloc[0], permitir_ausentes=True)
     # Validar cada día evita ocultar una humedad negativa o extremos incoherentes
     # mediante una media aparentemente válida.
     for fecha, fila in df.iterrows():
         try:
             Territorio(**{**metadata, "fecha": fecha.date().isoformat()},
-                       **{k: float(fila[k]) for k in PARAMETROS})
+                       **{k: float(fila[k]) if pd.notna(fila[k]) else None for k in PARAMETROS})
         except ValueError as exc:
             raise DatosInsuficientes(f"Dato inválido el {fecha.date()}: {exc}") from exc
+    avisos = [f"{k}: {int(df[k].count())}/{dias} días disponibles." for k in PARAMETROS if df[k].count() < dias]
     valores = {k: float(df[k].mean()) for k in PARAMETROS}
     valores["temp_min_C"] = float(df["temp_min_C"].min())
     valores["temp_max_C"] = float(df["temp_max_C"].max())
     valores["precipitacion_mm"] = float(df["precipitacion_mm"].sum(min_count=dias))
+    valores = {k: (v if np.isfinite(v) else None) for k,v in valores.items()}
+    if not any(v is not None for v in valores.values()):
+        raise DatosInsuficientes("No hay ninguna variable numérica disponible")
+    if df["precipitacion_mm"].count() < dias:
+        avisos.append("Precipitación excluida: el acumulado completo no se conoce; no se sustituye por cero.")
+    metadata["avisos_datos"] = tuple(avisos)
     return Territorio(**metadata, **valores), dias
 
 

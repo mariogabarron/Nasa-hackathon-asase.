@@ -60,6 +60,8 @@ class Territorio:
     suelo_carbono_organico_g_kg: float
     # Compatibilidad con el frontend: se acepta, pero NUNCA se utiliza.
     suelo_textura_clase: str | None = None
+    permitir_ausentes: bool = False
+    avisos_datos: tuple[str, ...] = ()
 
     def __post_init__(self):
         texto(self.id, "id")
@@ -68,13 +70,14 @@ class Territorio:
         numero(self.latitud, "latitud", -90, 90)
         numero(self.longitud, "longitud", -180, 180)
         for k in PARAMETROS:
-            numero(getattr(self, k), k)
+            numero(getattr(self, k), k) if getattr(self, k) is not None or not self.permitir_ausentes else None
         for k in ("precipitacion_mm", "radiacion_solar_MJ_m2", "suelo_carbono_organico_g_kg"):
-            numero(getattr(self, k), k, 0)
+            numero(getattr(self, k), k, 0) if getattr(self, k) is not None or not self.permitir_ausentes else None
         for k in ("humedad_suelo_smap_m3m3", "humedad_raiz_smap_m3m3"):
-            numero(getattr(self, k), k, 0, 1)
-        numero(self.suelo_ph_0_30cm, "suelo_ph_0_30cm", 0, 14)
-        if not self.temp_min_C <= self.temp_media_C <= self.temp_max_C:
+            numero(getattr(self, k), k, 0, 1) if getattr(self, k) is not None or not self.permitir_ausentes else None
+        numero(self.suelo_ph_0_30cm, "suelo_ph_0_30cm", 0, 14) if self.suelo_ph_0_30cm is not None or not self.permitir_ausentes else None
+        temps = [v for v in (self.temp_min_C, self.temp_media_C, self.temp_max_C) if v is not None]
+        if temps != sorted(temps):
             raise ValueError("Debe cumplirse temp_min_C <= temp_media_C <= temp_max_C")
 
 
@@ -194,7 +197,7 @@ class Configuracion:
 
     def __post_init__(self):
         for k in ("penalizacion_mismo_cultivo", "penalizacion_misma_familia", "penalizacion_historial_max"):
-            numero(getattr(self, k), k, 0, 1)
+            numero(getattr(self, k), k, 0, 1) if getattr(self, k) is not None or not self.permitir_ausentes else None
         entero(self.ventana_historial_dias, "ventana_historial_dias")
         numero(self.umbral_iac_bajo, "umbral_iac_bajo", 0, 100)
 
@@ -338,20 +341,28 @@ def evaluar_iac(
     ids = validar_historial_ids(historial_ids, catalogo)
     if ids and historial:
         raise ValueError("Usar historial con fechas O historial_ids, no ambos")
-    pesos = pesos_normalizados(territorio.fecha)
+    originales = pesos_normalizados(territorio.fecha)
+    disponibles = {k:w for k,w in originales.items() if getattr(territorio,k) is not None}
+    if not disponibles:
+        return {"iac": None, "razon": "Sin datos suficientes para calcular el IAC.", "detalles": []}
+    cobertura = sum(disponibles.values())
+    pesos = {k:w/cobertura for k,w in disponibles.items()}
     ideal_min, ideal_max = cultivo.temp_media_C
     tope_min, tope_max = cultivo.temp_tope
+    # El cero es solo un valor de trabajo: los parámetros ausentes NO tienen peso.
+    def v(k):
+        return getattr(territorio,k) if getattr(territorio,k) is not None else 0.0
     puntuaciones = {
-        "temp_media_C": min(limitar((territorio.temp_media_C - tope_min) / (ideal_min - tope_min)),
-                            limitar((tope_max - territorio.temp_media_C) / (tope_max - ideal_max))),
-        "temp_min_C": limitar((territorio.temp_min_C - tope_min) / (ideal_min - tope_min)),
-        "temp_max_C": limitar((tope_max - territorio.temp_max_C) / (tope_max - ideal_max)),
-        "suelo_carbono_organico_g_kg": limitar(territorio.suelo_carbono_organico_g_kg / cultivo.suelo_carbono_organico_g_kg),
+        "temp_media_C": min(limitar((v("temp_media_C") - tope_min) / (ideal_min - tope_min)),
+                            limitar((tope_max - v("temp_media_C")) / (tope_max - ideal_max))),
+        "temp_min_C": limitar((v("temp_min_C") - tope_min) / (ideal_min - tope_min)),
+        "temp_max_C": limitar((tope_max - v("temp_max_C")) / (tope_max - ideal_max)),
+        "suelo_carbono_organico_g_kg": limitar(v("suelo_carbono_organico_g_kg") / cultivo.suelo_carbono_organico_g_kg),
     }
     rangos = {k: getattr(cultivo, k) for k in permitidos}
     rangos["precipitacion_mm"] = tuple(v * dias / cultivo.duracion_ciclo_dias for v in cultivo.precipitacion_mm)
     for k in permitidos:
-        puntuaciones[k] = idoneidad_intervalo(getattr(territorio, k), rangos[k], margenes.get(k, 1.0))
+        puntuaciones[k] = idoneidad_intervalo(v(k), rangos[k], margenes.get(k, 1.0))
     detalles = []
     for k, peso in pesos.items():
         valor = getattr(territorio, k)
@@ -373,7 +384,7 @@ def evaluar_iac(
         detalles.append({"parametro": k, "peso": peso, "idoneidad": puntuaciones[k],
                          "perdida_puntos": perdida,
                          "razon": f"{nombre}: {valor:g} {unidad}; {referencia}. Reduce {perdida:.2f} puntos del IAC."})
-    base = 100 * math.fsum(pesos[k] * puntuaciones[k] for k in PARAMETROS)
+    base = 100 * math.fsum(pesos[k] * puntuaciones[k] for k in pesos)
     p, causa = penalizacion_historial(cultivo, historial, catalogo, fecha_iso(territorio.fecha), config, ids)
     perdida_historial = base * p
     if p > 0:
@@ -385,6 +396,11 @@ def evaluar_iac(
     razon = peor["razon"] if peor["perdida_puntos"] > 1e-10 else None
     if razon and iac < config.umbral_iac_bajo:
         razon = "IAC bajo. Principal limitante: " + razon
+    avisos = list(territorio.avisos_datos)
+    if cobertura < 1 - 1e-9:
+        avisos.append("IAC parcial: faltan " + ", ".join(k for k in originales if k not in disponibles) + f"; cobertura de pesos {100*cobertura:.1f}%. Pesos renormalizados; no equivale a una evaluación completa.")
+    if avisos:
+        razon = " ".join(([razon] if razon else []) + avisos)
     return {"iac": iac, "razon": razon, "iac_base": base,
             "estacion": estacion(territorio.fecha), "detalles": detalles}
 
@@ -392,7 +408,7 @@ def evaluar_iac(
 def calcular_iac(territorio: Territorio, cultivo: Cultivo, **opciones) -> dict:
     """Salida estricta para frontend: solamente IAC (0–100) y razón/null."""
     r = evaluar_iac(territorio, cultivo, **opciones)
-    return {"iac": round(r["iac"], 2), "razon": r["razon"]}
+    return {"iac": round(r["iac"], 2) if r["iac"] is not None else None, "razon": r["razon"]}
 
 
 def siguiente_mes(d: date) -> date:
@@ -473,9 +489,9 @@ def recomendar_rotacion(
             minimo_mes = min(minimo_mes, r["iac"])
             scores = {v["parametro"]: v["idoneidad"] for v in r["detalles"]}
             # Evita recomendar ciclos cuya media oculta un período crítico.
-            if any(scores[k] <= 0 for k in ("temp_media_C", "temp_min_C", "temp_max_C")):
+            if any(scores.get(k, 1) <= 0 for k in ("temp_media_C", "temp_min_C", "temp_max_C")):
                 admisible = False
-            if any(scores[k] < idoneidad_hidrica_minima for k in ("precipitacion_mm", "humedad_suelo_smap_m3m3", "humedad_raiz_smap_m3m3")):
+            if any(scores.get(k, 1) < idoneidad_hidrica_minima for k in ("precipitacion_mm", "humedad_suelo_smap_m3m3", "humedad_raiz_smap_m3m3")):
                 admisible = False
             cursor = hasta
         cache[clave] = media, minimo_mes, admisible
@@ -552,6 +568,10 @@ def recomendar_rotacion(
         "Alternancia de familias, filtros térmicos/hídricos y ajuste histórico son reglas configurables de prototipo.",
         "No se modelan riego, nitrógeno, plagas, fertilización ni evolución medida del carbono.",
     ]
+    supuestos.extend(territorio.avisos_datos)
+    faltantes = [k for k in PARAMETROS if getattr(territorio,k) is None]
+    if faltantes:
+        supuestos.append("Recomendación provisional: no se han podido verificar los filtros de las variables ausentes: " + ", ".join(faltantes))
     supuestos.append("Datos constantes: propuesta condicional, NO pronóstico climático anual." if escenarios is None
                      else "Usa los escenarios mensuales suministrados; su fiabilidad depende de la fuente.")
     if ids:
