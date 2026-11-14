@@ -1,0 +1,17 @@
+{
+  "start_date": "2026-04-01",
+  "end_date": "2028-03-31",
+  "point": null,
+  "bbox": [
+    9.3,
+    -0.9,
+    9.5,
+    -0.7
+  ],
+  "historial": [
+    1,
+    5
+  ],
+  "accion": "rotaciones",
+  "n_recomendaciones": 3
+}

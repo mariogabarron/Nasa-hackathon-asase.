@@ -1,0 +1,23 @@
+{
+  "accion": "iac",
+  "territorio": {
+    "id": "parcela-001",
+    "nombre": "Parcela de demostración (datos sintéticos)",
+    "latitud": 9.4,
+    "longitud": -0.84,
+    "fecha": "2026-04-01",
+    "temp_media_C": 27.0,
+    "temp_min_C": 24.0,
+    "temp_max_C": 30.0,
+    "precipitacion_mm": 150.0,
+    "radiacion_solar_MJ_m2": 21.0,
+    "humedad_suelo_smap_m3m3": 0.25,
+    "humedad_raiz_smap_m3m3": 0.3,
+    "temp_suelo_smap_C": 25.0,
+    "suelo_ph_0_30cm": 6.2,
+    "suelo_carbono_organico_g_kg": 18.0
+  },
+  "cultivo_id": 1,
+  "dias_precipitacion": 30,
+  "historial": []
+}

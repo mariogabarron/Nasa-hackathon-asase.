@@ -1,0 +1,7 @@
+fastapi==0.141.1
+pydantic==2.13.4
+uvicorn==0.52.1
+pandas==2.2.3
+numpy==2.3.5
+requests==2.34.2
+earthengine-api==1.7.52
