@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Una plataforma de agricultura predictiva y preventiva para países en desarrollo que utiliza datos satelitales de la NASA y modelos matemáticos para identificar zonas agrícolas vulnerables, anticipar riesgos para la productividad del suelo y recomendar estrategias de rotación de cultivos que ayuden a conservar su fertilidad.
+Una plataforma de agricultura predictiva y preventiva para países en desarrollo que utiliza datos satelitales de la NASA y modelos matemáticos para identificar zonas agrícolas vulnerables, anticipar riesgos para la productividad del suelo y recomendar estrategias de rotación de cultivos que ayuden a conservar su fertilidad en países de desarrollo como en el norte de Ghana.
 
 ## Organización del equipo
 
