@@ -104,3 +104,27 @@ Earth Engine; no se ha completado aquí una descarga real de esas fuentes.
 El script comprobar_fuentes.py permite verificarla en el servidor autorizado.
 
 Errores: 422 entrada inválida; 502 fuente/datos insuficientes; 503 credenciales.
+
+
+## Varias recomendaciones
+
+La acción rotaciones admite n_recomendaciones, entero positivo estricto,
+por defecto 3. Ejemplo: añadir `"n_recomendaciones": 5` a la petición.
+No se admite este campo explícito en peticiones iac.
+
+La respuesta añade:
+- recomendaciones: lista de planes, ordenados por días cultivados y después
+  por IAC ponderado por los días cultivados; cada plan incluye posicion.
+- n_solicitadas y n_devueltas.
+- aviso_recomendaciones cuando se encontraron menos alternativas.
+
+Los campos de la mejor opción (rotacion, dias_cultivados, etc.) se mantienen
+al nivel superior por compatibilidad. El frontend puede mostrar cada elemento
+de recomendaciones. Dos planes son diferentes si sus secuencias ordenadas de
+IDs de cultivo son diferentes. Para una misma secuencia se conserva el mejor
+calendario encontrado; cambiar solo fechas no crea una alternativa.
+
+Se reutiliza una única descarga de 2025 para toda la búsqueda. Los resultados
+son los mejores encontrados por una búsqueda aproximada, no un top-N global
+garantizado. Si no cabe ningún cultivo, se devuelve una única propuesta de
+barbecho con explicación, nunca N copias del mismo plan.

@@ -90,13 +90,14 @@ def agregar_tabla(tabla, start_date, end_date, point=None, bbox=None):
 
 
 def predecir(start_date, end_date=None, point=None, bbox=None, historial=None,
-             accion="iac", cultivo_id=None, *, getter=None, catalogo=None):
+             accion="iac", cultivo_id=None, n_recomendaciones=3, *, getter=None, catalogo=None):
     """Mismos argumentos del getter + IDs históricos + acción.
 
     Sin cultivo_id, iac devuelve un mapa por ID de cultivo. Con cultivo_id,
     devuelve únicamente iac y razon. El historial no incluye el cultivo objetivo.
     getter puede inyectarse para integrar otra implementación o probar sin red.
     """
+    entero(n_recomendaciones, "n_recomendaciones")
     end_date = resolver_periodo(start_date, end_date, accion)
     validar_consulta(start_date, end_date, point, bbox, permitir_largo=accion == "rotaciones")
     cat = CATALOGO if catalogo is None else catalogo
@@ -145,15 +146,24 @@ def predecir(start_date, end_date=None, point=None, bbox=None, historial=None,
             "dias_precipitacion": n,
         }
         cursor += pd.offsets.MonthBegin(1)
-    plan = recomendar_rotacion(replace(territorio, fecha=start_date), cat,
+    planes = recomendar_rotacion(replace(territorio, fecha=start_date), cat,
                               dias_precipitacion=dias, historial_ids=ids,
                               escenarios=escenarios, fecha_fin=fin_exclusivo.date().isoformat(),
-                              dias_entre_cultivos=0)
-    plan["periodo_plantacion"] = {"start_date": start_date, "end_date": end_date}
-    plan["referencia"] = {"anio": 2025, "metodo": "Patrón mensual de 2025 repetido; no es un pronóstico."}
-    plan["objetivo"] = "Maximizar días cultivados; desempatar por IAC. Búsqueda aproximada."
-    plan["porcentaje_ocupacion"] = round(100 * plan["dias_cultivados"] / plan["dias"], 2)
-    plan["supuestos"].append("Se permite cosechar y comenzar otro ciclo en la misma fecha (sin margen de preparación). Los ciclos deben caber completos y superar los filtros de aptitud.")
-    for t, _ in mensuales.values():
-        plan["supuestos"].extend(a for a in t.avisos_datos if a not in plan["supuestos"])
-    return plan
+                              dias_entre_cultivos=0, n_recomendaciones=n_recomendaciones)
+    for plan in planes:
+        plan["periodo_plantacion"] = {"start_date": start_date, "end_date": end_date}
+        plan["referencia"] = {"anio": 2025, "metodo": "Patrón mensual de 2025 repetido; no es un pronóstico."}
+        plan["objetivo"] = "Maximizar días cultivados; desempatar por IAC. Búsqueda aproximada."
+        plan["porcentaje_ocupacion"] = round(100 * plan["dias_cultivados"] / plan["dias"], 2)
+        plan["supuestos"].append("Se permite cosechar y comenzar otro ciclo en la misma fecha (sin margen de preparación). Los ciclos deben caber completos y superar los filtros de aptitud.")
+        for t, _ in mensuales.values():
+            plan["supuestos"].extend(a for a in t.avisos_datos if a not in plan["supuestos"])
+    # Se conservan los campos de la mejor opción para clientes anteriores.
+    resultado = dict(planes[0])
+    resultado["recomendaciones"] = [dict(p, posicion=i+1) for i,p in enumerate(planes)]
+    resultado["n_solicitadas"] = n_recomendaciones
+    resultado["n_devueltas"] = len(planes)
+    resultado["criterio_diferencia"] = "Secuencia ordenada de IDs de cultivo distinta; cambiar solo fechas no crea otra recomendación."
+    if len(planes) < n_recomendaciones:
+        resultado["aviso_recomendaciones"] = "La búsqueda no encontró suficientes secuencias distintas admisibles; no se duplican opciones."
+    return resultado

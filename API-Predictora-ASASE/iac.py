@@ -430,6 +430,7 @@ def recomendar_rotacion(
     iac_minimo: float = 60.0, idoneidad_hidrica_minima: float = .25,
     dias_entre_cultivos: int = 7, ancho_busqueda: int = 64,
     fecha_fin: str | None = None,
+    n_recomendaciones: int | None = None,
     historial_ids: list[int] | tuple[int, ...] = (),
 ) -> dict:
     """Plan anual mediante búsqueda en haz (aproximada, no óptimo garantizado).
@@ -438,6 +439,10 @@ def recomendar_rotacion(
     Si se omite, mantiene constantes los datos y lo declara como escenario
     condicional. Nunca extrapola el suelo como si fuera una medición futura.
     """
+    if n_recomendaciones is not None:
+        entero(n_recomendaciones, "n_recomendaciones")
+    limite = n_recomendaciones or 1
+    ancho_busqueda = max(ancho_busqueda, limite)
     entero(dias_precipitacion, "dias_precipitacion")
     entero(dias_entre_cultivos, "dias_entre_cultivos", 0)
     entero(ancho_busqueda, "ancho_busqueda")
@@ -517,11 +522,19 @@ def recomendar_rotacion(
     def ocupados(tramos):
         return sum(t["dias"] for t in tramos if t["tipo"] == "cultivo")
 
+    candidatos = {}
     while estados:
         siguientes = []
         for cursor, hist, tramos, utilidad in estados:
             finalizado = (fin, hist, tramos + ([tramo("barbecho", cursor, fin,
                 justificacion="Días sin cultivo en esta propuesta; no se atribuye una mejora automática del suelo.")] if cursor < fin else []), utilidad)
+            firma = tuple(t["cultivo_id"] for t in tramos if t["tipo"] == "cultivo")
+            previo = candidatos.get(firma)
+            if previo is None or (ocupados(tramos), utilidad) > (ocupados(previo[2]), previo[3]):
+                candidatos[firma] = finalizado
+            if len(candidatos) > limite:
+                peor = min(candidatos, key=lambda k: (ocupados(candidatos[k][2]), candidatos[k][3]))
+                del candidatos[peor]
             if (ocupados(tramos), utilidad) > (ocupados(mejor[2]), mejor[3]):
                 mejor = finalizado
             if cursor >= fin:
@@ -557,38 +570,46 @@ def recomendar_rotacion(
         siguientes.sort(key=lambda s: (ocupados(s[2]) + (fin - s[0]).days, s[3] + 100 * (fin-s[0]).days), reverse=True)
         estados = siguientes[:ancho_busqueda]
 
-    tramos = mejor[2]
-    # Une barbechos contiguos para una salida legible.
-    unidos = []
-    for t in tramos:
-        if unidos and t["tipo"] == unidos[-1]["tipo"] == "barbecho":
-            unidos[-1]["fecha_fin"] = t["fecha_fin"]
-            unidos[-1]["dias"] += t["dias"]
-            unidos[-1]["justificacion"] = "Período sin cultivo seleccionado dentro de las restricciones del modelo."
-        else:
-            unidos.append(dict(t))
-    cultivados = sum(t["dias"] for t in unidos if t["tipo"] == "cultivo")
-    supuestos = [
-        "IAC heurístico, no rendimiento ni porcentaje de productividad.",
-        "La lluvia del ciclo se prorratea uniformemente por días; no modela necesidades por fase.",
-        "Alternancia de familias, filtros térmicos/hídricos y ajuste histórico son reglas configurables de prototipo.",
-        "No se modelan riego, nitrógeno, plagas, fertilización ni evolución medida del carbono.",
-    ]
-    supuestos.extend(territorio.avisos_datos)
-    faltantes = [k for k in PARAMETROS if getattr(territorio,k) is None]
-    if faltantes:
-        supuestos.append("Recomendación provisional: no se han podido verificar los filtros de las variables ausentes: " + ", ".join(faltantes))
-    supuestos.append("Datos constantes: propuesta condicional, NO pronóstico climático anual." if escenarios is None
-                     else "Usa los escenarios mensuales suministrados; su fiabilidad depende de la fuente.")
-    if ids:
-        supuestos.append("Historial solo con IDs: orden antiguo a reciente; sin fechas, el ajuste inicial no decae durante el plan.")
-    return {"fecha_inicio": inicio.isoformat(), "fecha_fin": fin.isoformat(), "dias": horizonte,
-            "modo": "escenario_constante" if escenarios is None else "escenarios_mensuales",
-            "rotacion": unidos, "dias_cultivados": cultivados,
-            "justificacion": ("Propuesta que prioriza días cultivados y desempata por IAC, alternando familias, sin recortar ciclos. "
-                              "Búsqueda aproximada; los huecos se cubren con preparación o barbecho."
-                              if cultivados else "No se encontró ningún ciclo admisible con los datos, filtros y búsqueda utilizados; se devuelve el año en barbecho."),
-            "supuestos": supuestos}
+    def presentar(estado):
+        tramos = estado[2]
+        # Une barbechos contiguos para una salida legible.
+        unidos = []
+        for t in tramos:
+            if unidos and t["tipo"] == unidos[-1]["tipo"] == "barbecho":
+                unidos[-1]["fecha_fin"] = t["fecha_fin"]
+                unidos[-1]["dias"] += t["dias"]
+                unidos[-1]["justificacion"] = "Período sin cultivo seleccionado dentro de las restricciones del modelo."
+            else:
+                unidos.append(dict(t))
+        cultivados = sum(t["dias"] for t in unidos if t["tipo"] == "cultivo")
+        supuestos = [
+            "IAC heurístico, no rendimiento ni porcentaje de productividad.",
+            "La lluvia del ciclo se prorratea uniformemente por días; no modela necesidades por fase.",
+            "Alternancia de familias, filtros térmicos/hídricos y ajuste histórico son reglas configurables de prototipo.",
+            "No se modelan riego, nitrógeno, plagas, fertilización ni evolución medida del carbono.",
+        ]
+        supuestos.extend(territorio.avisos_datos)
+        faltantes = [k for k in PARAMETROS if getattr(territorio,k) is None]
+        if faltantes:
+            supuestos.append("Recomendación provisional: no se han podido verificar los filtros de las variables ausentes: " + ", ".join(faltantes))
+        supuestos.append("Datos constantes: propuesta condicional, NO pronóstico climático anual." if escenarios is None
+                         else "Usa los escenarios mensuales suministrados; su fiabilidad depende de la fuente.")
+        if ids:
+            supuestos.append("Historial solo con IDs: orden antiguo a reciente; sin fechas, el ajuste inicial no decae durante el plan.")
+        return {"iac_medio_cultivado": round(estado[3]/cultivados, 4) if cultivados else None,
+                "fecha_inicio": inicio.isoformat(), "fecha_fin": fin.isoformat(), "dias": horizonte,
+                "modo": "escenario_constante" if escenarios is None else "escenarios_mensuales",
+                "rotacion": unidos, "dias_cultivados": cultivados,
+                "justificacion": ("Propuesta que prioriza días cultivados y desempata por IAC, alternando familias, sin recortar ciclos. "
+                                  "Búsqueda aproximada; los huecos se cubren con preparación o barbecho."
+                                  if cultivados else "No se encontró ningún ciclo admisible con los datos, filtros y búsqueda utilizados; se devuelve el año en barbecho."),
+                "supuestos": supuestos}
+    ordenados = sorted(candidatos.values(), key=lambda e: (ocupados(e[2]), e[3]), reverse=True)
+    # El barbecho completo se devuelve solo si no se encontró ningún cultivo.
+    if any(ocupados(e[2]) for e in ordenados):
+        ordenados = [e for e in ordenados if ocupados(e[2])]
+    resultados = [presentar(e) for e in ordenados[:limite]]
+    return resultados if n_recomendaciones is not None else resultados[0]
 
 
 def procesar_peticion(payload: dict, catalogo: dict[int, Cultivo], *, config=None) -> dict:

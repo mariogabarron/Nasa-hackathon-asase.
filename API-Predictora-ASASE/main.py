@@ -26,9 +26,12 @@ class Peticion(BaseModel):
     historial: list[IdCultivo] = Field(default_factory=list, max_length=100)
     accion: Literal["iac", "rotaciones"]
     cultivo_id: IdCultivo | None = None
+    n_recomendaciones: Annotated[StrictInt, Field(ge=1)] = 3
 
     @model_validator(mode="after")
     def comprobar(self):
+        if self.accion != "rotaciones" and "n_recomendaciones" in self.model_fields_set:
+            raise ValueError("n_recomendaciones solo se admite con rotaciones")
         self.end_date = resolver_periodo(self.start_date, self.end_date, self.accion)
         validar_consulta(self.start_date, self.end_date, self.point, self.bbox, permitir_largo=self.accion == "rotaciones")
         if self.accion == "rotaciones" and self.cultivo_id is not None:

@@ -323,3 +323,40 @@ class PeriodoRotacionesTests(unittest.TestCase):
         r=predecir('2026-04-01','2026-04-10',point=[9,-1],accion='rotaciones',getter=lambda *a:tabla_2025())
         self.assertEqual(r['dias'],10)
         self.assertEqual(r['dias_cultivados'],0)
+
+class MultiplesTests(unittest.TestCase):
+    def test_tres_distintas_ordenadas_una_descarga(self):
+        f=Mock(return_value=tabla_2025())
+        r=predecir('2026-01-01',point=[9,-1],accion='rotaciones',getter=f)
+        self.assertEqual(r['n_devueltas'],3)
+        self.assertEqual(f.call_count,1)
+        firmas=[tuple(t['cultivo_id'] for t in p['rotacion'] if t['tipo']=='cultivo') for p in r['recomendaciones']]
+        self.assertEqual(len(set(firmas)),3)
+        orden=[(p['dias_cultivados'],p['iac_medio_cultivado']) for p in r['recomendaciones']]
+        self.assertEqual(orden,sorted(orden,reverse=True))
+        for p in r['recomendaciones']:
+            self.assertEqual(sum(t['dias'] for t in p['rotacion']),365)
+
+    def test_cinco_y_una(self):
+        for n in [1,5]:
+            r=predecir('2026-01-01',point=[9,-1],accion='rotaciones',n_recomendaciones=n,getter=lambda *a:tabla_2025())
+            self.assertEqual(r['n_devueltas'],n)
+
+    def test_sin_opciones_no_duplica_barbecho(self):
+        r=predecir('2026-01-01','2026-01-10',point=[9,-1],accion='rotaciones',n_recomendaciones=3,getter=lambda *a:tabla_2025())
+        self.assertEqual(r['n_devueltas'],1)
+        self.assertIn('aviso_recomendaciones',r)
+
+    def test_http_validacion_y_valor_predeterminado(self):
+        f=Mock(return_value=tabla_2025())
+        app.dependency_overrides[proveedor_getter]=lambda:f
+        try:
+            with TestClient(app) as client:
+                p=peticion();p.update(accion='rotaciones',end_date=None)
+                for n in [0,-1,1.5,True,'3',None]:
+                    self.assertEqual(client.post('/predecir',json=p|{'n_recomendaciones':n}).status_code,422)
+                f.assert_not_called()
+                r=client.post('/predecir',json=p)
+                self.assertEqual(r.status_code,200,r.text)
+                self.assertEqual(r.json()['n_solicitadas'],3)
+        finally: app.dependency_overrides.clear()

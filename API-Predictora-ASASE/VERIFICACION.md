@@ -1,3 +1,5 @@
+Actualización: 67 pruebas superadas. Incluye N=1, 3 y 5, secuencias únicas, orden, descarga única, validación HTTP de enteros positivos y alternativas insuficientes. Pruebas con datos controlados, sin nueva descarga real de Earth Engine.
+
 Actualización de rotaciones: 63 tests superados. Referencia mensual 2025, períodos de plantación multianuales, final opcional y prioridad de ocupación. No se ha realizado nueva descarga real de Earth Engine.
 
 Actualización: 59 pruebas superadas; caso de pH totalmente nulo probado con tabla controlada y endpoint HTTP. No se ha repetido la descarga real de Earth Engine de la localización indicada.
