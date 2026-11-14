@@ -4,17 +4,22 @@ Fecha: 14 de noviembre de 2026.
 
 ## Resultado
 
-- **71 pruebas Python superadas:** 67 originales del motor, agregación, fuentes controladas y API; cuatro nuevas del empaquetado web, recursos estáticos, catálogo y disponibilidad de documentación.
-- **6 escenarios de interfaz superados** con jsdom y Leaflet 1.9.4 real:
+- **77 pruebas Python superadas:** motor, agregación, fuentes controladas, API y empaquetado, más orden descendente, localización ES/EN, datos parciales, errores e independencia del idioma entre peticiones concurrentes.
+- **11 escenarios de interfaz superados** con jsdom y Leaflet 1.9.4 real:
   1. Conservación del acceso y ES/EN, zoom, selección del punto, carga de los 12 cultivos y petición IAC con fechas y coordenadas exactas.
   2. Recomendaciones con el número solicitado, representación de planes, tramos e IAC estimado.
   3. Creación de una parcela rectangular, historial en orden, análisis IAC y rotaciones, persistencia, edición y eliminación; escapado del nombre en HTML.
   4. Autolocalización simulada, permiso denegado y errores de configuración 503, sin resultados inventados.
   5. Descartar resultados de consultas antiguas al cambiar de ubicación o cancelar.
   6. Catálogo no disponible y reintento; aviso visible cuando falla el almacenamiento local.
+  7. Bloqueo de pasado, hoy, fechas vacías y rangos invertidos en recomendaciones, sin enviar consultas.
+  8. Migración de parcelas sin `cropId` y rangos independientes para IAC/recomendaciones.
+  9. Selectores alfabéticos ES/EN, sin IDs visibles y búsqueda sin acentos.
+  10. Tres colores en los límites 40/70, nulos neutros y mayor IAC primero.
+  11. Cambio de idioma que limpia resultados anteriores y solicita explicaciones/planes en inglés.
 - Comprobación de sintaxis JavaScript.
 - Hashes de los recursos locales de Leaflet coinciden con los atributos SRI del HTML.
-- Código de `getter.py`, `servicio.py`, `iac.py`, `validacion.py`, `errores.py` y `cultivos.json` conservado del ZIP original.
+- Fuentes (`getter.py`), validación, errores y catálogo originales conservados. Se añaden mensajes bilingües al motor y orden descendente de presentación al servicio; las fórmulas y la búsqueda agronómica no cambian.
 
 ## Alcance de las pruebas
 
@@ -31,6 +36,7 @@ No se dispone de credenciales Earth Engine autorizadas para verificar una consul
 3. Solicitar recomendaciones en su página y revisar fechas, ciclos y supuestos.
 4. Crear una parcela con punto y otra con rectángulo; añadir historial y analizar ambas.
 5. Recargar, comprobar persistencia y cambiar ES/EN.
-6. Revisar en una ventana estrecha el menú, controles del mapa, formularios y panel de resultados.
+6. Comprobar que las recomendaciones rechazan hoy/pasado y que los dos rangos de la parcela no se afectan entre sí.
+7. Revisar en una ventana estrecha el menú, controles del mapa, formularios y panel de resultados.
 
 Los datos y límites del motor se describen en `API.md` y `MOTOR.md`; el informe previo de la API se conserva como `VERIFICACION.md`.

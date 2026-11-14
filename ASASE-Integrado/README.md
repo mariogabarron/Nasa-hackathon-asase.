@@ -42,9 +42,9 @@ El getter original conserva su proyecto predeterminado; configura expresamente e
 ## Pantallas
 
 - **Inicio de sesión:** se conserva la pantalla original y su acceso de demostración, con ES/EN. No autentica usuarios: no envía ni guarda contraseñas. No protege los endpoints ni los registros locales.
-- **Mapa:** rango de fechas, selector con los IDs y nombres cargados desde `cultivos.json` a través de `/cultivos`, mapa Leaflet con zoom, autolocalización y selección al pulsar. El panel derecho permite obtener el IAC del cultivo seleccionado. También se pueden introducir coordenadas manualmente.
-- **Recomendaciones:** selección de punto, fechas de plantación y entre una y cinco propuestas. Muestra las secuencias devueltas por la API, IAC de cada ciclo, fechas, ocupación y supuestos. No inventa recomendaciones cuando la API falla.
-- **Parcelas:** crear, seleccionar, editar y eliminar parcelas; elegir un punto representativo o dibujar un rectángulo pulsando dos esquinas opuestas. Cada parcela guarda su nombre, cultivo e historial ordenado. Permite calcular el IAC del cultivo elegido en el selector superior o solicitar recomendaciones para su ubicación e historial.
+- **Mapa:** rango de fechas, selector de nombres cargados desde `cultivos.json` a través de `/cultivos`, ordenado alfabéticamente en ES/EN, sin IDs visibles y con buscador (ignora acentos), mapa Leaflet con zoom, autolocalización y selección al pulsar. El panel derecho permite obtener el IAC del cultivo seleccionado. También se pueden introducir coordenadas manualmente.
+- **Recomendaciones:** selección de punto, fechas de plantación desde mañana y entre una y cinco propuestas. Las propuestas devueltas se muestran por IAC medio descendente, con días cultivados como desempate y nulos al final. Muestra las secuencias devueltas por la API, IAC de cada ciclo, fechas, ocupación y supuestos. No inventa recomendaciones cuando la API falla.
+- **Parcelas:** crear, seleccionar, editar y eliminar parcelas; elegir un punto representativo o dibujar un rectángulo pulsando dos esquinas opuestas. Cada parcela guarda su nombre, ubicación e historial ordenado; no existe un cultivo actual/plantado. El cultivo elegido en el selector superior sirve solo para calcular un IAC. El botón de recomendaciones está en una sección separada y tiene sus propias fechas debajo, independientes de las del IAC.
 - **Fuentes:** explicación del origen de datos, alcance del motor y acceso a la documentación de la API.
 
 La geolocalización necesita permiso del navegador y un contexto seguro: HTTPS o localhost. La selección manual sigue disponible si se deniega el permiso. Leaflet 1.9.4 está incluido en `frontend/vendor`; las teselas se descargan de OpenStreetMap y conservan su atribución.
@@ -59,20 +59,27 @@ La geolocalización necesita permiso del navegador y un contexto seguro: HTTPS o
 | Recomendaciones | `accion: "rotaciones"`, `n_recomendaciones` y rango de plantación inclusivo; sin `cultivo_id` |
 | Historial | Lista de IDs numéricos, del más antiguo al más reciente; máximo 100 |
 
-El historial previo no debe incluir el cultivo que se está evaluando. Se edita manualmente: cambiar el cultivo actual no inventa un nuevo registro histórico. Las consultas de puntos independientes envían historial vacío. El selector superior cambia el cultivo del análisis; para cambiar el cultivo guardado se usa **Editar** en la parcela.
+El historial previo se introduce manualmente, del más antiguo al más reciente. No se añade automáticamente el cultivo que se está evaluando. Las consultas de puntos independientes envían historial vacío. El selector superior cambia únicamente el cultivo del análisis, sin guardar un cultivo plantado en la parcela.
 
 Las recomendaciones utilizan exclusivamente el patrón mensual de 2025 que repite el motor original. No son un pronóstico meteorológico. El IAC usa las fechas observadas indicadas por el usuario. En las rotaciones, `fecha_fin` de cada tramo es exclusiva; el fin del rango solicitado es inclusivo.
 
 Las áreas son cajas rectangulares, no polígonos catastrales: NASA POWER toma el centro; SMAP/SoilGrids promedian la caja. No se admiten cajas que crucen el antimeridiano.
 
+### Fechas de recomendaciones y colores
+
+Las recomendaciones, tanto por punto como por parcela, requieren ambas fechas posteriores a hoy (desde mañana, según la fecha local del navegador). Hay un mínimo en el calendario, un aviso pequeño junto a los campos y una comprobación antes de enviar. Fechas vacías, pasadas, de hoy o un rango invertido bloquean la consulta. El IAC mantiene su rango observado independiente. La API conserva la posibilidad de consultar escenarios históricos para compatibilidad; esta restricción de fechas futuras pertenece al frontend.
+
+Los IAC individuales, medios de propuesta y de cada ciclo se colorean en rojo para valores `<40`, ámbar para `40 ≤ IAC <70` y verde para `IAC ≥70`. Una leyenda acompaña los resultados; los nulos aparecen como `—` en tono neutro. Son bandas de interfaz, no una nueva calibración agronómica.
+
 ## Persistencia, idiomas y errores
 
 - Las parcelas se guardan en `localStorage`, clave `asase.parcels.v3`, sin base de datos compartida ni sincronización por cuenta. Distintos usuarios del mismo navegador/origen comparten esos registros. Borrar los datos del navegador los elimina.
+- Las parcelas existentes en `asase.parcels.v3` se migran automáticamente: se elimina `cropId` conservando nombre, ubicación e historial. No se transforma ese antiguo atributo en un registro histórico inventado.
 - Los registros regionales del frontend antiguo en `asase.records.v2` no se borran ni se migran automáticamente: no contienen coordenadas reales. Si los necesitas, crea las nuevas parcelas con su ubicación verificada.
 - Si el navegador rechaza el almacenamiento, se avisa y los cambios quedan solo en memoria. Una consulta no modifica el historial ni guarda su resultado como observación histórica.
 - Los resultados muestran la ubicación, las fechas, el cultivo y el historial usados. Cambiar esos parámetros invalida el resultado y descarta respuestas tardías. El botón de cancelar detiene la espera del cliente; un cálculo ya iniciado en el servidor puede terminar igualmente.
 - El cliente espera hasta cuatro minutos. Expone errores de validación (422), fuentes/datos (502), configuración (503), red y respuestas inválidas, sin puntuaciones de sustitución.
-- ES/EN se conserva para la interfaz y los nombres de cultivos. Las explicaciones libres de la API permanecen en español y se muestran sin traducción automática.
+- ES/EN se conserva para la interfaz y todos los nombres del catálogo. Las peticiones `/predecir` incluyen `language: "es" | "en"` (español por defecto). La API genera razones, justificaciones, supuestos, avisos y mensajes públicos de error en el idioma solicitado. Las claves JSON/IDs permanecen estables. Al cambiar de idioma se invalidan los resultados anteriores; la siguiente consulta responde en el nuevo idioma. No se usa traducción externa ni se mezcla el idioma entre peticiones concurrentes.
 
 ## Pruebas
 
@@ -103,7 +110,9 @@ Consulta `VERIFICACION-INTEGRACION.md` para los resultados y las limitaciones ve
 - `frontend/base.js`, `original.css`: pantalla de acceso, traducciones, iconos y base visual conservados.
 - `frontend/app.js`, `app.css`: páginas integradas, cliente API, Leaflet y parcelas.
 - `cultivos.json`: catálogo único del backend; no se duplica en el frontend.
-- `getter.py`, `servicio.py`, `iac.py`, `validacion.py`: motor y fuentes originales, sin cambios.
+- `getter.py`, `validacion.py`: fuentes y validación originales.
+- `servicio.py`: agregación y orden descendente de las propuestas devueltas; la generación sigue usando la búsqueda aproximada original.
+- `iac.py`, `idiomas.py`: motor con explicaciones bilingües; fórmulas y filtros conservados.
 - `tests/`: pruebas originales y pruebas nuevas de integración.
 
 Referencia de Leaflet: https://leafletjs.com/reference-1.9.4.html. Su licencia BSD se conserva en `frontend/vendor/leaflet/LICENSE`.

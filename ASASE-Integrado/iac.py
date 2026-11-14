@@ -5,6 +5,7 @@ el ajuste por historial y los filtros de rotación son reglas de prototipo,
 no coeficientes calibrados ni predicciones de rendimiento.
 """
 from __future__ import annotations
+from idiomas import tr, nombre_cultivo
 
 import argparse
 import json
@@ -154,6 +155,9 @@ ETIQUETAS = {
 }
 
 
+ETIQUETAS_EN = {'temp_media_C': 'Mean temperature', 'temp_min_C': 'Minimum temperature', 'temp_max_C': 'Maximum temperature', 'precipitacion_mm': 'Precipitation', 'radiacion_solar_MJ_m2': 'Solar radiation', 'humedad_suelo_smap_m3m3': 'Surface soil moisture', 'humedad_raiz_smap_m3m3': 'Root-zone soil moisture', 'temp_suelo_smap_C': 'Soil temperature', 'suelo_ph_0_30cm': 'Soil pH', 'suelo_carbono_organico_g_kg': 'Organic carbon'}
+
+
 def estacion(fecha: str) -> str:
     mes = fecha_iso(fecha).month
     if 4 <= mes <= 6:
@@ -291,10 +295,10 @@ def penalizacion_historial(cultivo, historial, catalogo, fecha, config, historia
         anterior = catalogo[cid]
         if anterior.id == cultivo.id:
             coef = config.penalizacion_mismo_cultivo
-            causa = f"repetición de {cultivo.nombre}"
+            causa = tr(f"repetición de {cultivo.nombre}", f"repetition of {nombre_cultivo(cultivo.nombre)}")
         elif anterior.familia.casefold() == cultivo.familia.casefold():
             coef = config.penalizacion_misma_familia
-            causa = f"misma familia ({cultivo.familia}) tras {anterior.nombre}"
+            causa = tr(f"misma familia ({cultivo.familia}) tras {anterior.nombre}", f"same family ({cultivo.familia}) after {nombre_cultivo(anterior.nombre)}")
         else:
             continue
         aporte = coef * factor_tiempo
@@ -344,7 +348,7 @@ def evaluar_iac(
     originales = pesos_normalizados(territorio.fecha)
     disponibles = {k:w for k,w in originales.items() if getattr(territorio,k) is not None}
     if not disponibles:
-        return {"iac": None, "razon": "Sin datos suficientes para calcular el IAC.", "detalles": []}
+        return {"iac": None, "razon": tr("Sin datos suficientes para calcular el IAC.", "Insufficient data to calculate IAC."), "detalles": []}
     cobertura = sum(disponibles.values())
     pesos = {k:w/cobertura for k,w in disponibles.items()}
     ideal_min, ideal_max = cultivo.temp_media_C
@@ -367,38 +371,40 @@ def evaluar_iac(
     for k, peso in pesos.items():
         valor = getattr(territorio, k)
         nombre, unidad = ETIQUETAS[k]
+        nombre = tr(nombre, ETIQUETAS_EN[k])
+        unidad = tr(unidad, unidad.replace("día", "day"))
         if k == "temp_media_C":
-            referencia = f"ideal {ideal_min:g}–{ideal_max:g} °C; topes {tope_min:g}–{tope_max:g} °C"
+            referencia = tr(f"ideal {ideal_min:g}–{ideal_max:g} °C; topes {tope_min:g}–{tope_max:g} °C", f"ideal {ideal_min:g}–{ideal_max:g} °C; limits {tope_min:g}–{tope_max:g} °C")
         elif k == "temp_min_C":
-            referencia = f"idoneidad plena desde {ideal_min:g} °C; cero en o bajo {tope_min:g} °C"
+            referencia = tr(f"idoneidad plena desde {ideal_min:g} °C; cero en o bajo {tope_min:g} °C", f"full suitability from {ideal_min:g} °C; zero at or below {tope_min:g} °C")
         elif k == "temp_max_C":
-            referencia = f"idoneidad plena hasta {ideal_max:g} °C; cero en o sobre {tope_max:g} °C"
+            referencia = tr(f"idoneidad plena hasta {ideal_max:g} °C; cero en o sobre {tope_max:g} °C", f"full suitability up to {ideal_max:g} °C; zero at or above {tope_max:g} °C")
         elif k == "suelo_carbono_organico_g_kg":
-            referencia = f"objetivo mínimo {cultivo.suelo_carbono_organico_g_kg:g} g/kg"
+            referencia = tr(f"objetivo mínimo {cultivo.suelo_carbono_organico_g_kg:g} g/kg", f"minimum target {cultivo.suelo_carbono_organico_g_kg:g} g/kg")
         else:
             a, b = rangos[k]
             referencia = f"ideal {a:g}–{b:g} {unidad}"
             if k == "precipitacion_mm":
-                referencia += f" en {dias} días"
+                referencia += tr(f" en {dias} días", f" over {dias} days")
         perdida = 100 * peso * (1 - puntuaciones[k])
         detalles.append({"parametro": k, "peso": peso, "idoneidad": puntuaciones[k],
                          "perdida_puntos": perdida,
-                         "razon": f"{nombre}: {valor:g} {unidad}; {referencia}. Reduce {perdida:.2f} puntos del IAC."})
+                         "razon": tr(f"{nombre}: {valor:g} {unidad}; {referencia}. Reduce {perdida:.2f} puntos del IAC.", f"{nombre}: {valor:g} {unidad}; {referencia}. Reduces IAC by {perdida:.2f} points.")})
     base = 100 * math.fsum(pesos[k] * puntuaciones[k] for k in pesos)
     p, causa = penalizacion_historial(cultivo, historial, catalogo, fecha_iso(territorio.fecha), config, ids)
     perdida_historial = base * p
     if p > 0:
         detalles.append({"parametro": "historial", "peso": None, "idoneidad": 1 - p,
                          "perdida_puntos": perdida_historial,
-                         "razon": f"Historial: {causa}. El ajuste acumulado por repetición reduce {perdida_historial:.2f} puntos; regla provisional, no deterioro medido del suelo."})
+                         "razon": tr(f"Historial: {causa}. El ajuste acumulado por repetición reduce {perdida_historial:.2f} puntos; regla provisional, no deterioro medido del suelo.", f"History: {causa}. The cumulative repetition adjustment reduces the score by {perdida_historial:.2f} points; a provisional rule, not measured soil deterioration.")})
     iac = max(0.0, min(100.0, base * (1 - p)))
     peor = max(detalles, key=lambda d: d["perdida_puntos"])
     razon = peor["razon"] if peor["perdida_puntos"] > 1e-10 else None
     if razon and iac < config.umbral_iac_bajo:
-        razon = "IAC bajo. Principal limitante: " + razon
+        razon = tr("IAC bajo. Principal limitante: ", "Low IAC. Main limiting factor: ") + razon
     avisos = list(territorio.avisos_datos)
     if cobertura < 1 - 1e-9:
-        avisos.append("IAC parcial: faltan " + ", ".join(k for k in originales if k not in disponibles) + f"; cobertura de pesos {100*cobertura:.1f}%. Pesos renormalizados; no equivale a una evaluación completa.")
+        avisos.append(tr("IAC parcial: faltan ", "Partial IAC: missing ") + ", ".join(k for k in originales if k not in disponibles) + tr(f"; cobertura de pesos {100*cobertura:.1f}%. Pesos renormalizados; no equivale a una evaluación completa.", f"; weight coverage {100*cobertura:.1f}%. Weights renormalized; this is not equivalent to a complete assessment."))
     if avisos:
         razon = " ".join(([razon] if razon else []) + avisos)
     return {"iac": iac, "razon": razon, "iac_base": base,
@@ -516,7 +522,7 @@ def recomendar_rotacion(
         disponible_inicial = min(fin, max(inicio, fecha_iso(historial[-1].fecha_fin) + timedelta(days=dias_entre_cultivos)))
         if disponible_inicial > inicio:
             tramos_iniciales.append(tramo("preparacion", inicio, disponible_inicial,
-                justificacion="Completa el margen de preparación tras el último cultivo registrado."))
+                justificacion=tr("Completa el margen de preparación tras el último cultivo registrado.", "Completes the preparation interval after the last recorded crop.")))
     estados = [(disponible_inicial, tuple(historial), tramos_iniciales, 0.0)]
     mejor = (inicio, tuple(historial), [], -1.0)
     def ocupados(tramos):
@@ -527,7 +533,7 @@ def recomendar_rotacion(
         siguientes = []
         for cursor, hist, tramos, utilidad in estados:
             finalizado = (fin, hist, tramos + ([tramo("barbecho", cursor, fin,
-                justificacion="Días sin cultivo en esta propuesta; no se atribuye una mejora automática del suelo.")] if cursor < fin else []), utilidad)
+                justificacion=tr("Días sin cultivo en esta propuesta; no se atribuye una mejora automática del suelo.", "Uncropped days in this proposal; no automatic soil improvement is assumed."))] if cursor < fin else []), utilidad)
             firma = tuple(t["cultivo_id"] for t in tramos if t["tipo"] == "cultivo")
             previo = candidatos.get(firma)
             if previo is None or (ocupados(tramos), utilidad) > (ocupados(previo[2]), previo[3]):
@@ -543,7 +549,7 @@ def recomendar_rotacion(
             proximo = min(siguiente_mes(cursor), fin)
             if proximo < fin:
                 siguientes.append((proximo, hist, tramos + [tramo("barbecho", cursor, proximo,
-                    justificacion="Espera hasta la siguiente ventana mensual evaluada.")], utilidad))
+                    justificacion=tr("Espera hasta la siguiente ventana mensual evaluada.", "Waits until the next evaluated monthly planting window."))], utilidad))
             for c in sorted(catalogo.values(), key=lambda x: x.id):
                 cosecha = cursor + timedelta(days=c.duracion_ciclo_dias)
                 if cosecha > fin:
@@ -556,15 +562,15 @@ def recomendar_rotacion(
                 iac = media * (1 - p)
                 if not admisible or minimo_mes * (1 - p) < iac_minimo:
                     continue
-                eleccion = tramo("cultivo", cursor, cosecha, cultivo_id=c.id, cultivo=c.nombre,
+                eleccion = tramo("cultivo", cursor, cosecha, cultivo_id=c.id, cultivo=nombre_cultivo(c.nombre),
                     familia=c.familia, iac_estimado=round(iac, 2),
-                    justificacion=f"IAC medio del ciclo {iac:.1f}/100; cumple los filtros en cada mes evaluado y alterna familia respecto al cultivo anterior, si existe.")
+                    justificacion=tr(f"IAC medio del ciclo {iac:.1f}/100; cumple los filtros en cada mes evaluado y alterna familia respecto al cultivo anterior, si existe.", f"Mean cycle IAC {iac:.1f}/100; passes the filters in each evaluated month and alternates family relative to the previous crop, if any."))
                 registro = RegistroCultivo(territorio.id, c.id, cursor.isoformat(), cosecha.isoformat())
                 disponible = min(cosecha + timedelta(days=dias_entre_cultivos), fin)
                 nuevos = tramos + [eleccion]
                 if disponible > cosecha:
                     nuevos += [tramo("preparacion", cosecha, disponible,
-                        justificacion="Margen configurable entre ciclos; no modifica el suelo simulado.")]
+                        justificacion=tr("Margen configurable entre ciclos; no modifica el suelo simulado.", "Configurable interval between cycles; it does not modify the simulated soil."))]
                 siguientes.append((disponible, hist + (registro,), nuevos, utilidad + iac * c.duracion_ciclo_dias))
         # Cota optimista: cada día restante podría alcanzar 100 puntos.
         siguientes.sort(key=lambda s: (ocupados(s[2]) + (fin - s[0]).days, s[3] + 100 * (fin-s[0]).days), reverse=True)
@@ -578,31 +584,31 @@ def recomendar_rotacion(
             if unidos and t["tipo"] == unidos[-1]["tipo"] == "barbecho":
                 unidos[-1]["fecha_fin"] = t["fecha_fin"]
                 unidos[-1]["dias"] += t["dias"]
-                unidos[-1]["justificacion"] = "Período sin cultivo seleccionado dentro de las restricciones del modelo."
+                unidos[-1]["justificacion"] = tr("Período sin cultivo seleccionado dentro de las restricciones del modelo.", "Period without a selected crop under the model constraints.")
             else:
                 unidos.append(dict(t))
         cultivados = sum(t["dias"] for t in unidos if t["tipo"] == "cultivo")
         supuestos = [
-            "IAC heurístico, no rendimiento ni porcentaje de productividad.",
-            "La lluvia del ciclo se prorratea uniformemente por días; no modela necesidades por fase.",
-            "Alternancia de familias, filtros térmicos/hídricos y ajuste histórico son reglas configurables de prototipo.",
-            "No se modelan riego, nitrógeno, plagas, fertilización ni evolución medida del carbono.",
+            tr("IAC heurístico, no rendimiento ni porcentaje de productividad.", "Heuristic IAC, not yield or a productivity percentage."),
+            tr("La lluvia del ciclo se prorratea uniformemente por días; no modela necesidades por fase.", "Cycle rainfall is distributed uniformly by day; growth-stage requirements are not modelled."),
+            tr("Alternancia de familias, filtros térmicos/hídricos y ajuste histórico son reglas configurables de prototipo.", "Family alternation, temperature/water filters and history adjustments are configurable prototype rules."),
+            tr("No se modelan riego, nitrógeno, plagas, fertilización ni evolución medida del carbono.", "Irrigation, nitrogen, pests, fertilization and measured carbon changes are not modelled."),
         ]
         supuestos.extend(territorio.avisos_datos)
         faltantes = [k for k in PARAMETROS if getattr(territorio,k) is None]
         if faltantes:
-            supuestos.append("Recomendación provisional: no se han podido verificar los filtros de las variables ausentes: " + ", ".join(faltantes))
-        supuestos.append("Datos constantes: propuesta condicional, NO pronóstico climático anual." if escenarios is None
-                         else "Usa los escenarios mensuales suministrados; su fiabilidad depende de la fuente.")
+            supuestos.append(tr("Recomendación provisional: no se han podido verificar los filtros de las variables ausentes: ", "Provisional recommendation: filters could not be checked for missing variables: ") + ", ".join(faltantes))
+        supuestos.append(tr("Datos constantes: propuesta condicional, NO pronóstico climático anual.", "Constant data: a conditional proposal, NOT an annual climate forecast.") if escenarios is None
+                         else tr("Usa los escenarios mensuales suministrados; su fiabilidad depende de la fuente.", "Uses the supplied monthly scenarios; reliability depends on the source."))
         if ids:
-            supuestos.append("Historial solo con IDs: orden antiguo a reciente; sin fechas, el ajuste inicial no decae durante el plan.")
+            supuestos.append(tr("Historial solo con IDs: orden antiguo a reciente; sin fechas, el ajuste inicial no decae durante el plan.", "ID-only history: oldest to newest; without dates, the initial adjustment does not decay during the plan."))
         return {"iac_medio_cultivado": round(estado[3]/cultivados, 4) if cultivados else None,
                 "fecha_inicio": inicio.isoformat(), "fecha_fin": fin.isoformat(), "dias": horizonte,
                 "modo": "escenario_constante" if escenarios is None else "escenarios_mensuales",
                 "rotacion": unidos, "dias_cultivados": cultivados,
-                "justificacion": ("Propuesta que prioriza días cultivados y desempata por IAC, alternando familias, sin recortar ciclos. "
-                                  "Búsqueda aproximada; los huecos se cubren con preparación o barbecho."
-                                  if cultivados else "No se encontró ningún ciclo admisible con los datos, filtros y búsqueda utilizados; se devuelve el año en barbecho."),
+                "justificacion": (tr("Propuesta que prioriza días cultivados y desempata por IAC, alternando familias, sin recortar ciclos. "
+                                  "Búsqueda aproximada; los huecos se cubren con preparación o barbecho.", "Proposal found by prioritizing cropped days and breaking ties by IAC, alternating families without truncating cycles. Approximate search; gaps are filled with preparation or fallow.")
+                                  if cultivados else tr("No se encontró ningún ciclo admisible con los datos, filtros y búsqueda utilizados; se devuelve el año en barbecho.", "No admissible cycle was found using the available data, filters and search; the period is returned as fallow.")),
                 "supuestos": supuestos}
     ordenados = sorted(candidatos.values(), key=lambda e: (ocupados(e[2]), e[3]), reverse=True)
     # El barbecho completo se devuelve solo si no se encontró ningún cultivo.

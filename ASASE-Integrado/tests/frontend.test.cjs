@@ -42,6 +42,15 @@ async function setup({
     },
   );
   const w = dom.window;
+  const NativeDate = w.Date;
+  w.Date = class extends NativeDate {
+    constructor(...args) {
+      super(...(args.length ? args : ["2026-11-14T12:00:00Z"]));
+    }
+    static now() {
+      return new NativeDate("2026-11-14T12:00:00Z").getTime();
+    }
+  };
   w.structuredClone = structuredClone;
   w.AbortController = AbortController;
   w.confirm = () => true;
@@ -154,6 +163,7 @@ test("Inicio, idiomas, Leaflet, zoom, punto e IAC real con fuentes controladas",
       point: [9.4, -0.84],
       historial: [],
       accion: "iac",
+      language: "es",
       cultivo_id: 1,
     });
     assert.equal(q.eval("typeof state.result.data.iac"), "number");
@@ -179,8 +189,8 @@ test("Recomendaciones consume planes, muestra tramos e IAC estimado", async () =
     q.click("[data-demo]");
     q.click('[data-view="recommendations"]');
     mapClick(q);
-    q.fill("#start-date", "2026-04-01");
-    q.fill("#end-date", "2027-03-31");
+    q.fill("#start-date", "2027-04-01");
+    q.fill("#end-date", "2028-03-31");
     q.fill("#rec-count", "2");
     q.click('[data-analyse="rotaciones"]');
     await q.tick();
@@ -205,7 +215,7 @@ test("Crear área, historial ordenado, analizar, persistir, editar y eliminar pa
     q.click('[data-view="parcels"]');
     q.click("#new-parcel");
     q.fill("#parcel-name", "Tamale <norte>");
-    q.fill("#parcel-crop", "3");
+    assert.equal(q.w.document.querySelector("#parcel-crop"), null);
     q.click('[data-selection="bbox"]');
     mapClick(q, 9, -1);
     mapClick(q, 10, 0);
@@ -221,6 +231,7 @@ test("Crear área, historial ordenado, analizar, persistir, editar y eliminar pa
     assert.ok(!q.w.document.querySelector("norte"));
     q.fill("#start-date", "2025-04-01");
     q.fill("#end-date", "2025-04-03");
+    q.fill("#crop", "3");
     q.click('[data-analyse="iac"]');
     await q.tick();
     let body = JSON.parse(q.calls.at(-1).body);
@@ -228,7 +239,8 @@ test("Crear área, historial ordenado, analizar, persistir, editar y eliminar pa
     assert.ok(!("point" in body));
     assert.deepEqual(body.historial, [1, 5]);
     assert.equal(body.cultivo_id, 3);
-    q.fill("#end-date", "2026-03-31");
+    q.fill("#rec-start-date", "2027-01-01");
+    q.fill("#rec-end-date", "2027-12-31");
     q.click('[data-analyse="rotaciones"]');
     await q.tick();
     assert.ok(q.w.document.querySelector(".plan"));
@@ -351,5 +363,258 @@ test("Catálogo caído bloquea consultas, permite reintentar; almacenamiento fal
     assert.match(b.w.document.body.textContent, /solo están en memoria/);
   } finally {
     b.dom.window.close();
+  }
+});
+
+test("Recomendaciones rechaza pasado, hoy, rango inverso y vacío, sin peticiones", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    q.click('[data-view="recommendations"]');
+    mapClick(q);
+    assert.equal(q.w.document.querySelector("#start-date").min, "2026-11-15");
+    const before = q.calls.length;
+    for (const [start, end, pattern] of [
+      ["2026-11-13", "2027-12-31", /futuras/],
+      ["2026-11-14", "2027-12-31", /futuras/],
+      ["2027-01-01", "2026-11-14", /futuras/],
+      ["2027-12-31", "2027-01-01", /posterior/],
+      ["", "2027-12-31", /Completa/],
+    ]) {
+      q.fill("#start-date", start);
+      q.fill("#end-date", end);
+      assert.match(
+        q.w.document.querySelector("#recommendation-date-error").textContent,
+        pattern,
+      );
+      assert.ok(
+        q.w.document.querySelector('[data-analyse="rotaciones"]').disabled,
+      );
+      await q.eval('analyse("rotaciones")');
+      assert.equal(q.calls.length, before);
+    }
+    q.fill("#start-date", "2027-01-01");
+    q.fill("#end-date", "2027-12-31");
+    assert.equal(
+      q.w.document.querySelector("#recommendation-date-error").textContent,
+      "",
+    );
+    assert.ok(
+      !q.w.document.querySelector('[data-analyse="rotaciones"]').disabled,
+    );
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Parcelas migra sin cultivo plantado y separa fechas IAC de recomendaciones", async () => {
+  const stored = JSON.stringify([
+    {
+      id: "old",
+      name: "Parcela existente",
+      point: [9, -1],
+      bbox: null,
+      cropId: 1,
+      history: [5, 2],
+    },
+  ]);
+  const q = await setup({ stored });
+  try {
+    assert.ok(
+      !(
+        "cropId" in JSON.parse(q.w.localStorage.getItem("asase.parcels.v3"))[0]
+      ),
+    );
+    q.click("[data-demo]");
+    q.click('[data-view="parcels"]');
+    q.click('[data-parcel="old"]');
+    assert.deepEqual(Array.from(q.eval("activeParcel().history")), [5, 2]);
+    q.fill("#start-date", "2025-04-01");
+    q.fill("#end-date", "2025-04-03");
+    q.fill("#rec-start-date", "2027-01-01");
+    q.fill("#rec-end-date", "2027-12-31");
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    let req = JSON.parse(q.calls.at(-1).body);
+    assert.equal(req.start_date, "2027-01-01");
+    assert.equal(req.end_date, "2027-12-31");
+    q.click('[data-analyse="iac"]');
+    await q.tick();
+    req = JSON.parse(q.calls.at(-1).body);
+    assert.equal(req.start_date, "2025-04-01");
+    assert.equal(req.end_date, "2025-04-03");
+    q.fill("#rec-start-date", "2026-11-14");
+    assert.match(
+      q.w.document.querySelector("#recommendation-date-error").textContent,
+      /futuras/,
+    );
+    assert.ok(
+      q.w.document.querySelector('[data-analyse="rotaciones"]').disabled,
+    );
+    assert.ok(!q.w.document.querySelector('[data-analyse="iac"]').disabled);
+    q.click("#edit-parcel");
+    assert.equal(q.w.document.querySelector("#parcel-crop"), null);
+    q.submit("#parcel-form");
+    assert.ok(
+      !(
+        "cropId" in JSON.parse(q.w.localStorage.getItem("asase.parcels.v3"))[0]
+      ),
+    );
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Selectores alfabéticos ES/EN, sin IDs y búsqueda sin acentos", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    mapClick(q);
+    const labels = () =>
+      Array.from(q.w.document.querySelectorAll("#crop option")).map(
+        (o) => o.textContent,
+      );
+    let names = labels();
+    assert.deepEqual(
+      names,
+      [...names].sort((a, b) =>
+        a.localeCompare(b, "es", { sensitivity: "base" }),
+      ),
+    );
+    assert.ok(names.every((n) => !/#|\d/.test(n)));
+    q.fill("#crop-search", "maiz");
+    assert.match(q.w.document.querySelector("#crop").textContent, /Maíz/);
+    assert.ok(
+      !q.w.document.querySelector("#crop").textContent.includes("Algodón"),
+    );
+    q.fill("#crop", "1");
+    q.click('[data-analyse="iac"]');
+    await q.tick();
+    q.fill("#crop-search", "zzzz");
+    assert.match(
+      q.w.document.querySelector("#crop").textContent,
+      /Sin resultados/,
+    );
+    assert.ok(q.w.document.querySelector('[data-analyse="iac"]').disabled);
+    q.click('[data-language="en"]');
+    names = labels().filter((n) => n !== "Select a crop");
+    assert.deepEqual(
+      names,
+      [...names].sort((a, b) =>
+        a.localeCompare(b, "en", { sensitivity: "base" }),
+      ),
+    );
+    assert.ok(names.includes("Maize"));
+    q.click('[data-view="parcels"]');
+    q.click("#new-parcel");
+    q.fill("#history-crop-search", "pea");
+    assert.match(
+      q.w.document.querySelector("#history-crop").textContent,
+      /Pea/i,
+    );
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("IAC tres colores y nulo neutro; propuesta con mayor IAC primero", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    mapClick(q);
+    for (const [value, klass] of [
+      [0, "iac-low"],
+      [39.99, "iac-low"],
+      [40, "iac-medium"],
+      [69.99, "iac-medium"],
+      [70, "iac-high"],
+      [100, "iac-high"],
+      [null, "iac-none"],
+    ]) {
+      q.w.fetch = async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({ iac: value, razon: null }),
+      });
+      q.click('[data-analyse="iac"]');
+      await q.tick();
+      assert.ok(
+        q.w.document.querySelector(".iac-number").classList.contains(klass),
+      );
+    }
+    q.click('[data-view="recommendations"]');
+    q.w.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        recomendaciones: [
+          {
+            iac_medio_cultivado: 65,
+            dias_cultivados: 365,
+            rotacion: [],
+            supuestos: [],
+          },
+          {
+            iac_medio_cultivado: 90,
+            dias_cultivados: 200,
+            rotacion: [],
+            supuestos: [],
+          },
+          {
+            iac_medio_cultivado: null,
+            dias_cultivados: 0,
+            rotacion: [],
+            supuestos: [],
+          },
+        ],
+      }),
+    });
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    assert.equal(
+      q.w.document.querySelector(".plan .plan-metrics .iac-high").textContent,
+      "90",
+    );
+    assert.ok(
+      q.w.document.querySelectorAll(".plan")[1].querySelector(".iac-medium"),
+    );
+  } finally {
+    q.dom.window.close();
+  }
+});
+
+test("Cambio a inglés limpia resultados previos y pide razones y planes en inglés", async () => {
+  const q = await setup();
+  try {
+    q.click("[data-demo]");
+    mapClick(q);
+    q.fill("#start-date", "2025-04-01");
+    q.fill("#end-date", "2025-04-03");
+    q.fill("#crop", "2");
+    q.click('[data-analyse="iac"]');
+    await q.tick();
+    assert.match(
+      q.w.document.querySelector("[data-api-text]").textContent,
+      /Temperatura mínima/,
+    );
+    q.click('[data-language="en"]');
+    assert.equal(q.w.document.querySelector(".iac-number"), null);
+    q.click('[data-analyse="iac"]');
+    await q.tick();
+    assert.equal(JSON.parse(q.calls.at(-1).body).language, "en");
+    assert.match(
+      q.w.document.querySelector("[data-api-text]").textContent,
+      /Minimum temperature/,
+    );
+    q.click('[data-view="recommendations"]');
+    q.click('[data-analyse="rotaciones"]');
+    await q.tick();
+    const text = Array.from(q.w.document.querySelectorAll("[data-api-text]"))
+      .map((el) => el.textContent)
+      .join(" ");
+    assert.match(text, /Proposal/);
+    assert.ok(!text.includes("cultivos"));
+  } finally {
+    q.dom.window.close();
   }
 });

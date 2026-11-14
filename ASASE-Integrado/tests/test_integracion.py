@@ -332,7 +332,7 @@ class MultiplesTests(unittest.TestCase):
         self.assertEqual(f.call_count,1)
         firmas=[tuple(t['cultivo_id'] for t in p['rotacion'] if t['tipo']=='cultivo') for p in r['recomendaciones']]
         self.assertEqual(len(set(firmas)),3)
-        orden=[(p['dias_cultivados'],p['iac_medio_cultivado']) for p in r['recomendaciones']]
+        orden=[(p['iac_medio_cultivado'],p['dias_cultivados']) for p in r['recomendaciones']]
         self.assertEqual(orden,sorted(orden,reverse=True))
         for p in r['recomendaciones']:
             self.assertEqual(sum(t['dias'] for t in p['rotacion']),365)

@@ -177,6 +177,8 @@ const englishTranslations = {
   Cacahuete: "Groundnut",
   Ñame: "Yam",
   Caupi: "Cowpea",
+  Caupí: "Cowpea",
+  Guisante: "Pea",
   Soja: "Soybean",
   Yuca: "Cassava",
   Boniato: "Sweet potato",

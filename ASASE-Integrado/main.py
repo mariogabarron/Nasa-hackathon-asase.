@@ -3,7 +3,11 @@ import logging
 import os
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import request_validation_exception_handler
+from idiomas import IDIOMA, error_publico, nombre_cultivo
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictFloat, StrictStr, model_validator
 
@@ -19,6 +23,7 @@ IdCultivo = Annotated[StrictInt, Field(ge=1)]
 
 class Peticion(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    language: Literal["es", "en"] = "es"
     start_date: StrictStr
     end_date: StrictStr | None = None
     point: tuple[Coordenada, Coordenada] | None = None
@@ -58,23 +63,40 @@ def health():
 
 
 @app.get("/cultivos")
-def cultivos():
-    return [{"id": c.id, "nombre": c.nombre, "familia": c.familia,
-             "duracion_ciclo_dias": c.duracion_ciclo_dias} for c in CATALOGO.values()]
+def cultivos(language: Literal["es", "en"] = "es"):
+    token = IDIOMA.set(language)
+    try:
+        return [{"id": c.id, "nombre": nombre_cultivo(c.nombre), "familia": c.familia,
+                 "duracion_ciclo_dias": c.duracion_ciclo_dias} for c in CATALOGO.values()]
+    finally:
+        IDIOMA.reset(token)
+
+
+@app.exception_handler(RequestValidationError)
+async def invalid_request(request: Request, exc: RequestValidationError):
+    if isinstance(exc.body, dict) and exc.body.get("language") == "en":
+        fields = ", ".join(".".join(map(str, e["loc"])) for e in exc.errors())
+        return JSONResponse(status_code=422, content={"detail": {"codigo": "ENTRADA_INVALIDA",
+            "mensaje": f"Invalid request ({fields}). Check required fields, dates, coordinates and crop IDs."}})
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.post("/predecir")
 def endpoint(peticion: Peticion, getter=Depends(proveedor_getter)):
+    token = IDIOMA.set(peticion.language)
     try:
-        return predecir(**peticion.model_dump(), getter=getter)
+        return predecir(**peticion.model_dump(exclude={"language"}), getter=getter)
     except ErrorConfiguracion as exc:
-        raise HTTPException(503, detail={"codigo": "CONFIGURACION", "mensaje": str(exc)}) from exc
+        raise HTTPException(503, detail={"codigo": "CONFIGURACION", "mensaje": error_publico("CONFIGURACION", exc)}) from exc
     except DatosInsuficientes as exc:
-        raise HTTPException(502, detail={"codigo": "DATOS_INCOMPLETOS", "mensaje": str(exc)}) from exc
+        raise HTTPException(502, detail={"codigo": "DATOS_INCOMPLETOS", "mensaje": error_publico("DATOS_INCOMPLETOS", exc)}) from exc
     except ErrorFuente as exc:
-        raise HTTPException(502, detail={"codigo": "FUENTE_EXTERNA", "mensaje": str(exc)}) from exc
+        raise HTTPException(502, detail={"codigo": "FUENTE_EXTERNA", "mensaje": error_publico("FUENTE_EXTERNA", exc)}) from exc
     except ValueError as exc:
-        raise HTTPException(422, detail={"codigo": "ENTRADA_INVALIDA", "mensaje": str(exc)}) from exc
+        raise HTTPException(422, detail={"codigo": "ENTRADA_INVALIDA", "mensaje": error_publico("ENTRADA_INVALIDA", exc)}) from exc
+
+    finally:
+        IDIOMA.reset(token)
 
 
 # Frontend y API comparten origen; se conservan los endpoints originales.

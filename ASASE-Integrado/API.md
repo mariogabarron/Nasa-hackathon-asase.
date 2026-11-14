@@ -113,8 +113,11 @@ por defecto 3. Ejemplo: añadir `"n_recomendaciones": 5` a la petición.
 No se admite este campo explícito en peticiones iac.
 
 La respuesta añade:
-- recomendaciones: lista de planes, ordenados por días cultivados y después
-  por IAC ponderado por los días cultivados; cada plan incluye posicion.
+- recomendaciones: lista de planes devueltos, ordenados por IAC medio ponderado por días
+  descendente y, en caso de empate, días cultivados descendentes; nulos al final.
+  Cada plan incluye posicion (1 = mejor IAC medio entre las propuestas devueltas).
+- criterio_orden: descripción del criterio de presentación. Los campos del nivel
+  superior corresponden a la primera propuesta de este orden.
 - n_solicitadas y n_devueltas.
 - aviso_recomendaciones cuando se encontraron menos alternativas.
 
@@ -128,3 +131,31 @@ Se reutiliza una única descarga de 2025 para toda la búsqueda. Los resultados
 son los mejores encontrados por una búsqueda aproximada, no un top-N global
 garantizado. Si no cabe ningún cultivo, se devuelve una única propuesta de
 barbecho con explicación, nunca N copias del mismo plan.
+
+
+## Idioma de las respuestas
+
+`POST /predecir` admite `"language": "es"` o `"language": "en"`; por defecto `es`.
+Se localizan los nombres de cultivos en las rotaciones, razones del IAC,
+justificaciones, supuestos, avisos y errores públicos. Se conservan las claves
+JSON, valores de enumeraciones, IDs y resultados numéricos. Un idioma no
+admitido devuelve 422. `GET /cultivos?language=en` ofrece el catálogo en inglés.
+
+Ejemplo:
+
+```json
+{
+  "start_date": "2027-01-01",
+  "end_date": "2027-12-31",
+  "point": [9.4, -0.84],
+  "accion": "rotaciones",
+  "n_recomendaciones": 3,
+  "language": "en"
+}
+```
+
+La búsqueda original prioriza ocupación y genera propuestas distintas. Tras esa
+búsqueda, el servicio ordena las propuestas encontradas por IAC medio descendente.
+No es una garantía de óptimo global. La validación de fechas futuras de las
+recomendaciones se aplica en la interfaz; la API sigue admitiendo escenarios
+históricos para otros clientes y pruebas.
