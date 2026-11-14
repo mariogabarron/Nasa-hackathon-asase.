@@ -9,9 +9,21 @@ import ee
 from ee.apitestcase import ApiTestCase
 
 from getter import descargar_smap, descargar_suelo, construir_geometria
+from errores import ErrorFuente
 
 
 class EarthEngineGraphTests(ApiTestCase):
+    def test_smap_registra_causa_sin_exponerla_en_el_mensaje_publico(self):
+        geom=construir_geometria(ee,[9.4,-.84],None)
+        causa=ee.EEException('Permission denied: serviceusage.services.use')
+        with patch.object(ee.data,'computeValue',side_effect=causa):
+            with self.assertLogs('getter',level='ERROR') as logs:
+                with self.assertRaises(ErrorFuente) as error:
+                    descargar_smap(ee,'2025-04-01','2025-04-01',geom)
+        self.assertIn('serviceusage.services.use','\n'.join(logs.output))
+        self.assertEqual(str(error.exception),'No se pudo obtener SMAP de Earth Engine')
+        self.assertIs(error.exception.__cause__,causa)
+
     def test_smap_fecha_final_inclusiva_y_grafo_serializable(self):
         grafos=[]
 

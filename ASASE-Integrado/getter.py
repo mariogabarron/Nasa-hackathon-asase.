@@ -192,6 +192,8 @@ def descargar_smap(ee, start_date, end_date, geometria):
             filas.extend(f["properties"] for f in resultado["features"])
             cursor = hasta
     except Exception as exc:
+        # Solo en logs del servidor: conserva la causa que el HTTP 502 oculta.
+        LOG.exception("Error al consultar SMAP en Earth Engine")
         raise ErrorFuente("No se pudo obtener SMAP de Earth Engine") from exc
     return parsear_smap(filas)
 
