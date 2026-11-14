@@ -1,0 +1,224 @@
+{
+  "region": "Northern",
+  "cultivo": "maiz",
+  "cultivo_nombre": "Maíz",
+  "fecha_consulta": "2026-11-14",
+  "periodo_historico_permitido": [
+    "2025-11-14",
+    "2026-11-14"
+  ],
+  "numero_meses_con_datos": 12,
+  "ultima_observacion": {
+    "fecha": "2026-11-14",
+    "estacion": "retirada_lluvias_cosecha",
+    "cultivo": "maiz",
+    "cultivo_nombre": "Maíz",
+    "iac_100": 86.0,
+    "iac_ponderado_antes_de_vetos_100": 86.0,
+    "categoria_global": null,
+    "veto_activado": false,
+    "variables_criticas_en_N": [],
+    "ajuste_minimo_humedad_m3m3": 0.0,
+    "contribuciones": [
+      {
+        "parametro": "temp_media_C",
+        "valor": 29.0,
+        "categoria": "S2",
+        "puntuacion": 0.65,
+        "peso": 0.1,
+        "aporte_puntos": 6.5,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "temp_min_C",
+        "valor": 20.0,
+        "categoria": "S1",
+        "puntuacion": 1.0,
+        "peso": 0.04,
+        "aporte_puntos": 4.0,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "temp_max_C",
+        "valor": 36.0,
+        "categoria": "S2",
+        "puntuacion": 0.65,
+        "peso": 0.08,
+        "aporte_puntos": 5.2,
+        "critico": true,
+        "veto_activado": false
+      },
+      {
+        "parametro": "precipitacion_mm",
+        "valor": 85.0,
+        "categoria": "S2",
+        "puntuacion": 0.65,
+        "peso": 0.12,
+        "aporte_puntos": 7.8,
+        "critico": true,
+        "veto_activado": false
+      },
+      {
+        "parametro": "radiacion_solar_MJ_m2",
+        "valor": 23.0,
+        "categoria": "S1",
+        "puntuacion": 1.0,
+        "peso": 0.14,
+        "aporte_puntos": 14.0,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "humedad_suelo_smap_m3m3",
+        "valor": 0.21,
+        "categoria": "S2",
+        "puntuacion": 0.65,
+        "peso": 0.06,
+        "aporte_puntos": 3.9,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "humedad_raiz_smap_m3m3",
+        "valor": 0.26,
+        "categoria": "S1",
+        "puntuacion": 1.0,
+        "peso": 0.22,
+        "aporte_puntos": 22.0,
+        "critico": true,
+        "veto_activado": false
+      },
+      {
+        "parametro": "temp_suelo_smap_C",
+        "valor": 32.0,
+        "categoria": "S2",
+        "puntuacion": 0.65,
+        "peso": 0.04,
+        "aporte_puntos": 2.6,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "suelo_ph_0_30cm",
+        "valor": 6.3,
+        "categoria": "S1",
+        "puntuacion": 1.0,
+        "peso": 0.06,
+        "aporte_puntos": 6.0,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "suelo_carbono_organico_g_kg",
+        "valor": 12.7,
+        "categoria": "S1",
+        "puntuacion": 1.0,
+        "peso": 0.07,
+        "aporte_puntos": 7.0,
+        "critico": false,
+        "veto_activado": false
+      },
+      {
+        "parametro": "suelo_textura_clase",
+        "valor": "Franco",
+        "categoria": "S1",
+        "puntuacion": 1.0,
+        "peso": 0.07,
+        "aporte_puntos": 7.0,
+        "critico": false,
+        "veto_activado": false
+      }
+    ]
+  },
+  "historial_12_meses": [
+    {
+      "fecha": "2025-12-15",
+      "estacion": "epoca_seca_harmattan",
+      "iac_100": 0.0,
+      "iac_ponderado_antes_de_vetos_100": 59.3,
+      "veto_activado": true
+    },
+    {
+      "fecha": "2026-01-15",
+      "estacion": "epoca_seca_harmattan",
+      "iac_100": 0.0,
+      "iac_ponderado_antes_de_vetos_100": 59.3,
+      "veto_activado": true
+    },
+    {
+      "fecha": "2026-02-15",
+      "estacion": "epoca_seca_harmattan",
+      "iac_100": 0.0,
+      "iac_ponderado_antes_de_vetos_100": 36.7,
+      "veto_activado": true
+    },
+    {
+      "fecha": "2026-03-15",
+      "estacion": "epoca_seca_harmattan",
+      "iac_100": 0.0,
+      "iac_ponderado_antes_de_vetos_100": 33.9,
+      "veto_activado": true
+    },
+    {
+      "fecha": "2026-04-15",
+      "estacion": "inicio_lluvias_siembra",
+      "iac_100": 63.25,
+      "iac_ponderado_antes_de_vetos_100": 63.25,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-05-15",
+      "estacion": "inicio_lluvias_siembra",
+      "iac_100": 97.2,
+      "iac_ponderado_antes_de_vetos_100": 97.2,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-06-15",
+      "estacion": "inicio_lluvias_siembra",
+      "iac_100": 100.0,
+      "iac_ponderado_antes_de_vetos_100": 100.0,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-07-15",
+      "estacion": "plena_lluvia_crecimiento",
+      "iac_100": 100.0,
+      "iac_ponderado_antes_de_vetos_100": 100.0,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-08-15",
+      "estacion": "plena_lluvia_crecimiento",
+      "iac_100": 87.4,
+      "iac_ponderado_antes_de_vetos_100": 87.4,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-09-15",
+      "estacion": "plena_lluvia_crecimiento",
+      "iac_100": 98.6,
+      "iac_ponderado_antes_de_vetos_100": 98.6,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-10-15",
+      "estacion": "retirada_lluvias_cosecha",
+      "iac_100": 95.8,
+      "iac_ponderado_antes_de_vetos_100": 95.8,
+      "veto_activado": false
+    },
+    {
+      "fecha": "2026-11-14",
+      "estacion": "retirada_lluvias_cosecha",
+      "iac_100": 86.0,
+      "iac_ponderado_antes_de_vetos_100": 86.0,
+      "veto_activado": false
+    }
+  ],
+  "variacion_entre_primera_y_ultima_observacion": 86.0,
+  "metodologia": "Evaluación multicriterio ponderada con veto por factor crítico",
+  "advertencia": "Historial retrospectivo; NO es una predicción, ni un porcentaje de rendimiento o pérdida de productividad. Rangos y pesos requieren validación agronómica."
+}
