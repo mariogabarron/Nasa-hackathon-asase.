@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f7f5">
+<title>asase. — Inteligencia para proteger la productividad agrícola</title>
+<style>
+:root{--bg:#f6f7f5;--surface:#fff;--surface2:#f8f9f7;--ink:#1c2923;--muted:#7a8780;--line:#e9ece8;--brand:#245844;--brand2:#46795e;--soft:#eaf2eb;--shadow:0 7px 32px rgba(33,45,39,.035),0 1px 4px rgba(33,45,39,.025);--shadow2:0 15px 42px rgba(33,45,39,.075);--green:#43836e;--amber:#d49b48;--red:#d77767;--nav:#63706b;--radius:22px}
+*{box-sizing:border-box}html{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Inter,sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}body{margin:0;background:var(--bg);min-height:100vh}button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid #7daf9d;outline-offset:3px}button{border:0}button:disabled{cursor:not-allowed;opacity:.5}.app{min-height:100vh;display:flex}.sidebar{width:239px;background:rgba(255,255,255,.94);border-right:1px solid var(--line);flex-shrink:0;display:flex;flex-direction:column;padding:29px 17px 20px;position:sticky;top:0;height:100vh;z-index:21;transition:transform .25s}.brand{display:flex;align-items:center;gap:12px;padding:8px 11px 34px}.brand-symbol{width:38px;height:38px;border-radius:13px;background:#245844;display:grid;place-items:center;color:#fff;box-shadow:0 4px 15px #24584420}.brand-symbol svg{width:25px;height:25px}.brand-name{font-size:25px;font-weight:720;letter-spacing:-1.35px}.brand-sub{font-size:10.5px;color:#8b968f;letter-spacing:.04em;margin-top:-2px}.sidebar-label{color:#a6aca8;font-size:10px;letter-spacing:1.35px;font-weight:750;padding:13px 13px 11px}.nav{display:flex;flex-direction:column;gap:4px}.nav-btn{width:100%;display:flex;align-items:center;gap:12px;border-radius:12px;padding:13px 13px;color:var(--nav);background:transparent;text-align:left;font-size:13.5px;font-weight:560;transition:background .2s,color .2s}.nav-btn svg{width:18px;height:18px;stroke-width:1.9;flex-shrink:0}.nav-btn:hover{background:#f4f7f4;color:var(--ink)}.nav-btn.active{background:#eaf2ec;color:#20523d;font-weight:700}.nav-separator{height:1px;background:var(--line);margin:22px 12px 10px}.sidebar-spacer{flex:1}.sidebar-foot{background:#f3f6f3;border:1px solid #edf0ec;border-radius:17px;padding:15px;margin:0 2px}.sidebar-foot-top{font-size:11px;letter-spacing:.04em;font-weight:700;display:flex;gap:7px;align-items:center}.status-dot{display:inline-block;background:#59a875;width:7px;height:7px;border-radius:50%;box-shadow:0 0 0 3px #59a87519}.sidebar-foot p{font-size:11.5px;line-height:1.65;color:#8c9990;margin:8px 0 0}.page{min-width:0;flex:1;max-width:1900px;margin:0 auto}.topbar{height:77px;border-bottom:1px solid rgba(218,225,219,.72);display:flex;align-items:center;justify-content:space-between;padding:0 36px;gap:15px;background:rgba(255,255,255,.64);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);position:sticky;top:0;z-index:15}.crumbs{display:flex;align-items:center;gap:10px;font-size:12px;color:#9ca59f}.crumbs b{color:var(--ink);font-weight:650}.top-actions{display:flex;gap:12px;align-items:center}.demo{color:#8d7738;background:#fbf4dd;border:1px solid #f2e7b9;padding:7px 11px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap}.icon-btn{width:37px;height:37px;border:1px solid var(--line);background:var(--surface);border-radius:12px;color:#536459;display:grid;place-items:center;box-shadow:0 1px 2px #102d1510}.icon-btn svg{width:17px;height:17px}.segmented{display:flex;background:#eff1ef;border:1px solid #e7eae7;padding:3px;border-radius:14px;gap:2px}.segment{padding:8px 13px;display:flex;align-items:center;gap:7px;background:transparent;color:#87938a;border-radius:10px;font-size:12px;font-weight:650;white-space:nowrap}.segment svg{width:15px;height:15px}.segment.active{color:#235441;background:#fff;box-shadow:0 1px 6px #1c2f2813}.main{padding:32px 36px 46px;max-width:1550px;margin:0 auto}.eyebrow{color:#889c8d;font-weight:740;letter-spacing:1.5px;font-size:10px;text-transform:uppercase;display:flex;gap:8px;align-items:center}.eyebrow:before{content:'';width:17px;height:2px;background:#72947b;border-radius:2px}.heading{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:9px 0 25px}.heading h1{font-size:clamp(29px,3vw,40px);line-height:1.16;font-weight:750;letter-spacing:-1.6px;margin:0 0 9px}.heading p{font-size:13px;color:#87938a;margin:0;line-height:1.6}.heading .heading-right{color:#9aa49e;font-size:11px;align-self:center;white-space:nowrap;display:flex;align-items:center;gap:8px}.filter-strip{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:13px;margin-bottom:20px}.select-wrap{background:var(--surface);border:1px solid var(--line);border-radius:15px;min-width:0;padding:11px 13px;display:flex;align-items:center;gap:11px;box-shadow:0 1px 1px #1c2f2806}.select-icon{color:#5e7c69;display:flex;flex-shrink:0}.select-icon svg{height:19px;width:19px;stroke-width:1.9}.select-content{display:flex;flex-direction:column;min-width:0;flex:1;gap:3px}.filter-label{font-size:10px;color:#9aa69c;font-weight:650}.select-wrap select{font-size:13px;color:var(--ink);background:none;border:none;outline:none;font-weight:670;min-width:0;width:100%;appearance:none;cursor:pointer}.chev{color:#9ca89f;display:flex;pointer-events:none}.chev svg{width:15px;height:15px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:20px}.metric{border:1px solid var(--line);border-radius:18px;background:var(--surface);padding:18px 19px 17px;box-shadow:var(--shadow);min-width:0}.metric-top{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:12px}.metric-label{font-size:11px;color:#8b998e;font-weight:600}.metric-icon{width:30px;height:30px;background:#f1f6f1;border-radius:10px;display:grid;place-items:center;color:#5e8d6d}.metric-icon svg{width:16px;height:16px}.metric-value{font-size:28px;letter-spacing:-1.35px;font-weight:770;line-height:1.05;white-space:nowrap}.metric-unit{font-size:12px;color:#9aa59e;font-weight:520;letter-spacing:0}.metric-bottom{margin-top:9px;font-size:10.5px;color:#9fa99f}.metric-bottom .positive{color:#4a9271;font-weight:650}.metric-bottom .warn{color:#c0874a;font-weight:650}.layout{display:grid;grid-template-columns:minmax(0,1.58fr) minmax(305px,1fr);gap:18px;align-items:start}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0;overflow:hidden}.card-header{display:flex;align-items:start;justify-content:space-between;gap:10px;padding:20px 22px 16px}.card-headline{font-size:16px;letter-spacing:-.37px;font-weight:735;margin:0}.card-sub{font-size:11px;color:#9aa59d;margin:6px 0 0}.small-toggle{display:flex;gap:1px;border-radius:11px;background:#f3f5f3;padding:3px;flex-shrink:0}.small-toggle button{background:transparent;padding:7px 11px;border-radius:9px;color:#91a095;font-size:11px;font-weight:700}.small-toggle button.active{background:#fff;box-shadow:0 1px 5px #213a2517;color:#365b47}.map-outer{margin:0 15px 15px;position:relative;height:385px;background:#e8eddf;border-radius:16px;overflow:hidden;border:1px solid #e6e9dc;isolation:isolate}.map-outer:after{pointer-events:none;content:'';position:absolute;inset:0;box-shadow:inset 0 0 80px #f5f7ee80}.map-grid{width:100%;height:100%;display:block}.parcel{cursor:pointer;stroke:#fff;stroke-width:3;stroke-linejoin:round;paint-order:stroke;transition:opacity .2s,fill .25s,stroke-width .18s;opacity:.84}.parcel:hover{opacity:1;stroke-width:5}.parcel.selected{stroke:#fff;stroke-width:6;opacity:1;filter:drop-shadow(0px 3px 7px #33543340)}.parcel-label{pointer-events:none;font-weight:750;font-size:22px;fill:#fff;paint-order:stroke;stroke:#3f56482e;stroke-width:3px;text-anchor:middle;dominant-baseline:middle}.map-top-left{position:absolute;left:17px;top:17px;padding:9px 12px;border:1px solid #fff9;background:#ffffffd9;box-shadow:0 2px 15px #0000000a;backdrop-filter:blur(10px);border-radius:12px;display:flex;align-items:center;gap:9px;font-size:11px;color:#4c6754;font-weight:670}.map-top-left svg{width:15px;height:15px}.map-compass{position:absolute;right:16px;bottom:16px;display:grid;place-items:center;width:34px;height:34px;background:#ffffffdb;border-radius:11px;box-shadow:0 2px 15px #00000008;font-size:11px;font-weight:770;color:#566a5c}.map-compass:before{content:'▲';color:#335d45;font-size:9px;position:absolute;top:2px}.map-compass span{margin-top:7px}.map-bottom-left{position:absolute;left:17px;bottom:17px;padding:7px 10px;background:#ffffffd9;border:1px solid #fff9;border-radius:9px;color:#6c8172;font-size:10px;backdrop-filter:blur(10px)}.legend{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:0 23px 19px;color:#89968c;font-size:11px}.legend b{font-weight:650;color:#637267}.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.detail{padding:0}.detail-top{padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center}.detail-kicker{font-size:10px;font-weight:750;letter-spacing:1.1px;text-transform:uppercase;color:#98a59b}.priority-badge{border-radius:100px;padding:8px 11px;font-size:10px;font-weight:790;white-space:nowrap}.priority-badge.medium{background:#fff3df;color:#b37d35}.priority-badge.high{background:#ffebe7;color:#b95949}.priority-badge.low{background:#eaf5ee;color:#458a68}.parcel-name{font-size:24px;letter-spacing:-.85px;font-weight:740;margin:4px 22px 10px}.score-block{display:flex;align-items:center;justify-content:space-between;padding:7px 22px 19px}.score-numeral{font-size:52px;letter-spacing:-2.8px;font-weight:780;line-height:1}.score-numeral span{font-size:19px;color:#9ba89d;font-weight:500;letter-spacing:-.4px}.score-caption{font-size:11px;color:#9ba79e;margin-top:8px}.ring{--pct:68;--ringColor:#d6a354;width:96px;height:96px;background:conic-gradient(var(--ringColor) calc(var(--pct)*1%),#eff2ec 0);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 6px #fff inset}.ring-inner{background:#fff;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;align-content:center;gap:2px}.ring-inner strong{font-size:14px;color:var(--ink);font-weight:740}.ring-inner small{font-size:9px;color:#a5b0a7}.insight{margin:0 18px;background:#f8f7f0;border:1px solid #f1ecdf;border-radius:13px;padding:12px 13px;display:flex;align-items:start;gap:9px;font-size:11.5px;color:#7d775e;line-height:1.55}.insight svg{width:17px;height:17px;flex-shrink:0;color:#bf9858;margin-top:1px}.section-label{font-size:10px;font-weight:750;letter-spacing:1.1px;color:#a6ada6;margin:20px 22px 11px;text-transform:uppercase}.factors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 18px 18px}.factor{border:1px solid #e9ede8;background:#fdfefd;border-radius:13px;padding:11px 9px;min-height:90px;display:flex;flex-direction:column;align-items:start;justify-content:space-between;gap:7px}.factor-icon{color:#789681;display:flex}.factor-icon svg{width:17px;height:17px}.factor-name{font-size:10px;color:#94a197;line-height:1.3}.factor-value{font-size:12px;font-weight:760;letter-spacing:-.2px;color:#394f40}.factor-pill{border-radius:5px;padding:3px 5px;font-size:9px;font-weight:750}.factor-pill.good{background:#e7f2e8;color:#447756}.factor-pill.warn{background:#fff2dc;color:#a27336}.factor-pill.none{background:#f1f2f1;color:#8b9690}.action-card{margin:0 18px 18px;background:linear-gradient(135deg,#244f3f,#347158);color:white;border-radius:16px;padding:18px 18px 17px;position:relative;overflow:hidden}.action-card:after{content:'';position:absolute;right:-28px;bottom:-80px;width:190px;height:190px;border:1px solid #ffffff17;border-radius:50%;box-shadow:0 0 0 29px #ffffff06,0 0 0 58px #ffffff05;pointer-events:none}.action-kicker{font-size:10px;color:#bdd9c6;letter-spacing:1.1px;font-weight:780;text-transform:uppercase}.action-title{font-size:15px;font-weight:730;letter-spacing:-.2px;margin-top:7px;max-width:240px;line-height:1.32}.action-body{font-size:11px;line-height:1.6;color:#c6e0cf;margin-top:7px;max-width:300px}.white-link{background:#ffffff;display:inline-flex;gap:8px;align-items:center;border-radius:9px;margin-top:15px;padding:9px 12px;color:#285a46;font-size:11px;font-weight:740}.white-link svg{width:14px;height:14px}.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.bottom-card{padding:20px 21px 18px}.bottom-card .card-headline{font-size:15px}.bottom-card .card-sub{line-height:1.55}.priority-list{display:flex;flex-direction:column;gap:0;margin-top:13px}.priority-item{padding:10px 0;display:flex;align-items:center;border-top:1px solid #eef0ee;gap:11px;width:100%;text-align:left;background:transparent}.priority-icon{width:32px;height:32px;border-radius:10px;background:#f4f5f2;display:grid;place-items:center;color:#6e806f;font-size:12px;font-weight:750}.priority-text{flex:1;min-width:0}.priority-text strong{display:block;font-size:11.5px;font-weight:720}.priority-text small{font-size:10px;color:#9ba79e}.priority-item .mini-score{font-size:14px;font-weight:750;letter-spacing:-.4px}.priority-item>svg{width:15px;height:15px;flex-shrink:0;color:#a0aaa2}.compare-row{margin-top:13px;display:flex;flex-direction:column;gap:16px}.compare-track{display:grid;grid-template-columns:54px 1fr 35px;gap:9px;align-items:center;font-size:11px}.compare-name{color:#78897d;font-weight:670}.bar-track{height:8px;border-radius:10px;background:#eef1ea;overflow:hidden}.bar-fill{height:100%;border-radius:10px;background:#7f9b84;transition:width .45s}.bar-fill.main{background:#c5a15f}.compare-number{color:#596f5e;text-align:right;font-weight:750}.compare-note{font-size:10px;color:#a2aba2;line-height:1.6;margin:15px 0 0}.foot{display:flex;justify-content:space-between;align-items:center;gap:20px;color:#a5aea5;font-size:10px;margin-top:20px}.foot span{display:flex;gap:6px;align-items:center}.foot svg{width:13px;height:13px}.farmer-panel{display:none}.farmer-only{display:none}.mobile-menu{display:none}.empty-page{display:none}.inner-view{display:none}.show-view .dashboard-only{display:none}.show-view .inner-view{display:block}.view-intro{margin:0 0 17px;color:#8d9a90;font-size:13px}.view-layout{display:grid;grid-template-columns:1.2fr .8fr;gap:17px}.view-panel{padding:24px}.view-panel h2{font-size:17px;margin:0 0 8px;letter-spacing:-.4px}.view-panel p{font-size:12px;color:#91a094;line-height:1.7}.region-table{border-collapse:collapse;width:100%;margin-top:17px}.region-table th{text-align:left;padding:11px 8px;font-size:10px;letter-spacing:.6px;color:#a2aca4;text-transform:uppercase;border-bottom:1px solid var(--line)}.region-table td{padding:14px 8px;border-bottom:1px solid var(--line);font-size:12px}.region-table tr[data-parcel]{cursor:pointer}.region-table tr[data-parcel]:hover{background:#f7faf6}.table-tag{font-size:10px;padding:6px 9px;border-radius:8px;font-weight:700}.table-tag.high{background:#fff0e9;color:#b96854}.table-tag.medium{background:#fff4e1;color:#a98243}.table-tag.low{background:#ecf5ee;color:#528665}.action-check{display:flex;align-items:start;gap:11px;padding:14px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;color:#5b6b60}.action-check input{accent-color:#377455;width:16px;height:16px;flex-shrink:0}.view-huge{font-size:63px;font-weight:790;letter-spacing:-3px;line-height:1.1;margin-top:20px}.view-huge small{font-size:18px;color:#9ba89e;font-weight:450;letter-spacing:0}.view-summary{font-size:12px;color:#8b9a8f;line-height:1.7}.farmer-hero{background:linear-gradient(140deg,#f5f9f2 0%,#eaf2e8 100%);border:1px solid #e5eee3;border-radius:23px;padding:35px;margin-bottom:20px;position:relative;overflow:hidden}.farmer-hero:after{content:'';position:absolute;width:235px;height:235px;border:1px solid #5b98721c;border-radius:50%;right:-20px;bottom:-110px;box-shadow:0 0 0 37px #5b98720a,0 0 0 74px #5b987208}.farmer-hero .eyebrow{color:#709480}.farmer-hero h2{font-size:33px;letter-spacing:-1.3px;margin:13px 0 8px}.farmer-hero p{max-width:550px;font-size:13px;color:#68836f;line-height:1.8}.farmer-status{display:inline-flex;background:#fff;padding:11px 15px;border:1px solid #e6ebe2;border-radius:12px;font-weight:730;font-size:12px;gap:9px;align-items:center}.farmer-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.farmer-card{padding:22px}.farmer-card .big-status{font-size:51px;font-weight:780;letter-spacing:-2px}.farmer-card p{font-size:12px;color:#849488;line-height:1.8}.farmer-action{display:flex;gap:10px;align-items:flex-start;border-top:1px solid #edf0eb;padding:16px 0}.farmer-action svg{width:19px;height:19px;flex-shrink:0;color:#598d6a}.farmer-action strong{font-size:12px}.farmer-action p{margin:4px 0 0;font-size:11.5px}.primary-button{display:inline-flex;align-items:center;gap:9px;background:#245844;color:white;font-size:12px;font-weight:730;padding:12px 16px;border-radius:11px;margin-top:10px}.primary-button svg{width:15px;height:15px}.muted-button{background:#f0f4ee;padding:11px 13px;border-radius:10px;color:#426b50;font-size:11.5px;font-weight:720}.notice{margin-top:15px;border:1px solid #ede9d9;padding:12px 14px;border-radius:13px;background:#fdfbf2;font-size:10.5px;color:#a39a73;line-height:1.55}.sidebar-overlay{display:none}
+/* Dark mode: restrained native appearance */
+body.dark{--bg:#171d1a;--surface:#252e29;--surface2:#1b251f;--ink:#e8efe9;--muted:#aab9ae;--line:#344138;--nav:#a9b8ac;--shadow:0 6px 32px #00000022;background:var(--bg)}.dark .sidebar,.dark .topbar{background:#222c26eb}.dark .brand-symbol{background:#407a5b}.dark .nav-btn.active,.dark .nav-btn:hover{background:#314738;color:#ccebd4}.dark .sidebar-foot,.dark .metric-icon,.dark .icon-btn,.dark .factor,.dark .select-wrap,.dark .small-toggle button.active,.dark .segment.active{background:#29372e}.dark .sidebar-foot{border-color:#36463c}.dark .segmented,.dark .small-toggle{background:#1a241e;border-color:#354239}.dark .select-wrap select{color:var(--ink)}.dark .heading p,.dark .metric-label,.dark .metric-bottom,.dark .card-sub,.dark .score-caption,.dark .factor-name,.dark .compare-note,.dark .foot{color:#9daea1}.dark .insight{background:#363727;border-color:#454630;color:#d4c5a5}.dark .factor{border-color:#36463c}.dark .factor-value,.dark .ring-inner strong{color:var(--ink)}.dark .ring-inner{background:#252e29}.dark .ring{box-shadow:0 0 0 6px #252e29 inset}.dark .farmer-hero{background:linear-gradient(135deg,#293d30,#294734);border-color:#35533d}.dark .farmer-hero p{color:#bbd3c0}.dark .farmer-status{background:#344d3b;border-color:#46644b}.dark .farmer-action,.dark .priority-item,.dark .region-table td,.dark .region-table th{border-color:#39463a}.dark .muted-button{background:#35473a;color:#c4e4ca}.dark .notice{background:#3b3a2d;border-color:#4b4936}.dark .demo{background:#49452f;color:#ead1a1;border-color:#665c3c}
+@media(max-width:1280px){.sidebar{width:215px}.topbar{padding:0 24px}.main{padding:28px 24px}.layout{grid-template-columns:minmax(0,1.35fr) minmax(288px,1fr)}.map-outer{height:350px}.metric{padding:15px}.metric-value{font-size:25px}.bottom-grid{gap:12px}}
+@media(max-width:1040px){.sidebar{width:74px;padding:25px 10px}.brand{padding:0 8px 30px}.brand-name,.brand-sub,.sidebar-label,.nav-btn span,.sidebar-foot,.nav-separator{display:none}.brand-symbol{flex-shrink:0}.nav-btn{justify-content:center;padding:13px 0}.nav-btn svg{width:20px;height:20px}.layout{grid-template-columns:1fr}.detail{display:grid;grid-template-columns:1fr 1fr;align-items:start}.detail-top,.parcel-name,.score-block,.insight{grid-column:1}.section-label,.factors,.action-card{grid-column:2}.detail-top{grid-row:1}.parcel-name{grid-row:2}.score-block{grid-row:3}.insight{grid-row:4;margin-bottom:20px}.section-label{grid-row:1;margin-top:24px}.factors{grid-row:2 / span 2}.action-card{grid-row:4}.map-outer{height:410px}}
+@media(max-width:720px){.sidebar{position:fixed;inset:0 auto 0 0;width:250px;transform:translateX(-105%);padding:29px 17px}.sidebar.open{transform:translateX(0)}.sidebar.open .brand-name,.sidebar.open .brand-sub,.sidebar.open .sidebar-label,.sidebar.open .nav-btn span,.sidebar.open .sidebar-foot{display:block}.sidebar.open .nav-btn{justify-content:flex-start;padding:13px}.sidebar.open .sidebar-foot-top{display:flex}.sidebar.open .brand{padding:8px 11px 34px}.sidebar-overlay.visible{display:block;position:fixed;inset:0;background:#0a1e13a0;z-index:20}.mobile-menu{display:grid}.topbar{height:63px;padding:0 15px}.crumbs{font-size:11px}.top-actions{gap:6px}.top-actions>.demo{display:none}.segmented{padding:2px}.segment{font-size:0;padding:8px 11px}.segment svg{height:18px;width:18px}.main{padding:23px 15px}.heading{margin:10px 0 22px}.heading h1{font-size:30px}.heading-right{display:none!important}.filter-strip{grid-template-columns:1fr 1fr;gap:9px}.filter-strip .select-wrap:first-child{grid-column:1/-1}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:15px}.metric-value{font-size:26px}.layout{gap:13px}.card-header{padding:17px}.card-headline{font-size:15px}.map-outer{height:290px;margin:0 10px 10px}.map-top-left{font-size:9px;top:10px;left:10px}.map-bottom-left{font-size:9px}.legend{gap:10px;padding:0 15px 15px;font-size:10px}.detail{display:block}.detail-top{padding-top:20px}.section-label{margin-top:18px}.bottom-grid,.farmer-layout,.view-layout{grid-template-columns:1fr;gap:13px}.bottom-grid{margin-top:13px}.farmer-hero{padding:23px}.farmer-hero h2{font-size:27px}.foot{align-items:start;flex-direction:column;gap:7px}.view-panel{padding:17px}.region-table td{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.farmer-status svg,.notice svg{width:18px!important;height:18px!important;flex-shrink:0;vertical-align:middle}.notice{display:flex;align-items:flex-start;gap:9px}.farmer-status{max-width:100%;line-height:1.4}.farmer-status svg{width:18px;height:18px}
+/* ASASE / Apple-like liquid glass refinement. Helvetica Neue uses the installed system font. */
+:root{--bg:#eef2ed;--ink:#203029;--line:rgba(165,183,171,.24);--shadow:0 8px 34px rgba(35,63,44,.045),0 1px 3px rgba(32,51,38,.03);--radius:23px}
+html,body,button,select{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif!important}
+body{background:radial-gradient(ellipse at 86% 3%,#dfe9dc 0%,transparent 36%),radial-gradient(ellipse at 24% 87%,#e6eee5 0%,transparent 49%),#f3f5f1}
+.sidebar{background:rgba(249,252,249,.72)!important;border-right:1px solid rgba(255,255,255,.85)!important;backdrop-filter:blur(32px) saturate(175%);-webkit-backdrop-filter:blur(32px) saturate(175%)}
+.topbar{background:rgba(251,253,250,.67)!important;border-bottom:1px solid rgba(255,255,255,.86)!important;box-shadow:0 2px 18px rgba(35,61,44,.028);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%)}
+.card,.metric{background:rgba(255,255,255,.80);border:1px solid rgba(255,255,255,.98);backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%);box-shadow:0 9px 35px rgba(38,61,45,.042),inset 0 1px 0 rgba(255,255,255,.78)}
+.select-wrap,.icon-btn,.segmented,.small-toggle,.sidebar-foot{background:rgba(255,255,255,.48);border:1px solid rgba(255,255,255,.90);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);box-shadow:0 3px 12px rgba(34,48,38,.025)}
+.segment,.small-toggle button,.nav-btn,.icon-btn,.primary-button,.white-link,.muted-button{transition:background .18s,box-shadow .18s,transform .18s,filter .18s}
+.segment:hover,.small-toggle button:hover,.icon-btn:hover,.muted-button:hover{transform:translateY(-1px);background:rgba(255,255,255,.65)}
+.segment.active,.small-toggle button.active{background:rgba(255,255,255,.87)!important;box-shadow:0 2px 9px rgba(24,53,34,.085),inset 0 1px 0 #fff}
+.nav-btn.active{background:rgba(213,230,218,.64);box-shadow:inset 0 1px 0 rgba(255,255,255,.53)}
+.metric{border-radius:20px}.card{border-radius:26px}.metric-value{font-weight:670;letter-spacing:-1.4px}
+.heading h1{font-weight:700;letter-spacing:-1.75px}.brand-name{font-weight:700}.card-headline{font-weight:690}
+.map-outer{height:430px;background:linear-gradient(145deg,#e6eee5,#eff6f0);border:1px solid rgba(255,255,255,.9);border-radius:21px}
+.map-outer:after{box-shadow:inset 0 0 52px rgba(249,252,245,.32)}
+.map-top-left,.map-bottom-left,.map-compass,.map-zoom{background:rgba(255,255,255,.66)!important;border:1px solid rgba(255,255,255,.82)!important;backdrop-filter:blur(20px) saturate(175%);-webkit-backdrop-filter:blur(20px) saturate(175%);box-shadow:0 7px 30px rgba(38,64,44,.07),inset 0 1px 0 rgba(255,255,255,.66)}
+.map-top-left,.map-bottom-left{border-radius:12px}.map-compass{right:16px;bottom:15px}
+.map-zoom{position:absolute;right:16px;top:17px;display:flex;align-items:center;flex-direction:column;border-radius:14px;overflow:hidden;z-index:3}
+.map-zoom button{font-family:"Helvetica Neue",sans-serif!important;width:32px;height:32px;background:transparent;border:0;border-bottom:1px solid rgba(167,180,166,.2);color:#47705a;font-size:18px;line-height:1;cursor:pointer}
+.map-zoom button:last-child{border-bottom:0}.map-zoom button:hover{background:rgba(255,255,255,.85)}
+.ghana-map path{pointer-events:none}.geo-marker .svg-glass,.geo-marker .geo-label{pointer-events:all!important}.geo-marker{cursor:pointer;outline:none;transition:opacity .2s;transform-origin:center}.geo-marker:hover .marker-halo{fill-opacity:.36}.geo-marker.chosen .marker-halo{stroke:#ffffffbd;stroke-width:2}
+.geo-marker:focus-visible .marker-halo{stroke:#316d4e;stroke-width:4;fill-opacity:.3}
+.geo-label{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;font-weight:680;letter-spacing:-.15px;fill:#385543;pointer-events:none;paint-order:stroke;stroke:rgba(255,255,255,.4);stroke-width:.3}
+.svg-glass{fill:rgba(255,255,255,.72);stroke:rgba(255,255,255,.84);stroke-width:1.1;filter:drop-shadow(0 3px 8px rgba(44,73,50,.07));pointer-events:none}
+.demo{background:rgba(255,242,206,.66);border-color:rgba(238,215,161,.43)}
+.bar-track{background:rgba(101,139,109,.1)}
+.action-card{background:linear-gradient(140deg,#275d4bbf,#285a49eb);backdrop-filter:blur(20px)}
+.farmer-hero{background:linear-gradient(115deg,rgba(246,252,245,.86),rgba(208,232,213,.54));backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.82)}
+body.dark{background:radial-gradient(ellipse at 80% 5%,#243b2e 0%,transparent 40%),#151e19;--line:rgba(129,159,138,.22)}
+body.dark .sidebar,body.dark .topbar{background:rgba(29,42,34,.77)!important;border-color:rgba(255,255,255,.1)!important}
+body.dark .card,body.dark .metric{background:rgba(38,53,43,.78);border-color:rgba(255,255,255,.09)}
+body.dark .select-wrap,body.dark .segmented,body.dark .icon-btn,body.dark .small-toggle{background:rgba(43,59,47,.72);border-color:rgba(255,255,255,.1)}
+body.dark .map-top-left,body.dark .map-bottom-left,body.dark .map-compass,body.dark .map-zoom{background:rgba(33,49,39,.72)!important;border-color:rgba(255,255,255,.16)!important;color:#e0ece0}
+body.dark .map-zoom button{color:#c5e8ce}
+@media(max-width:1040px){.map-outer{height:430px}}
+@media(max-width:720px){.map-outer{height:360px}.map-top-left{font-size:10px;left:11px;top:11px}.map-bottom-left{bottom:12px;left:11px;font-size:9px;max-width:71%}.map-zoom{right:10px;top:11px}.map-compass{right:10px;bottom:10px}}
+
+
+/* ÚNICO CAMBIO VISUAL: mapa interactivo de las regiones del norte de Ghana. */
+.ghana-map .geo-region-item{cursor:pointer;outline:none}
+.ghana-map path.geo-region{pointer-events:all!important;stroke:rgba(255,255,255,.96);stroke-width:3.4;stroke-linejoin:round;stroke-linecap:round;opacity:.90;transition:opacity .18s,stroke-width .18s,filter .18s}
+.ghana-map .geo-region-item:hover path.geo-region{opacity:1;stroke-width:5;filter:brightness(1.04)}
+.ghana-map path.geo-region.selected{opacity:1;stroke-width:6;stroke:#fff;filter:drop-shadow(0 1px 2px rgba(36,69,42,.22))}
+.ghana-map .geo-region-item:focus-visible path.geo-region{stroke:#183e32;stroke-width:6}
+.ghana-map .region-label-bg{fill:rgba(255,255,255,.79);stroke:rgba(255,255,255,.95);stroke-width:1;pointer-events:none;filter:drop-shadow(0 3px 9px rgba(36,62,45,.12))}
+.ghana-map .region-label{font-size:14px;fill:#264d3c;font-weight:750;letter-spacing:.02em;dominant-baseline:middle;pointer-events:none}
+body.dark .ghana-map .region-label-bg{fill:rgba(36,51,42,.92);stroke:rgba(255,255,255,.3)}
+body.dark .ghana-map .region-label{fill:#e5f5e8}
+@media(max-width:720px){.ghana-map .region-label{font-size:15px}}
+
+[hidden]{display:none!important}input,select{font:inherit}input:focus-visible{outline:3px solid #7daf9d;outline-offset:2px}.heading-right svg{width:18px}.filter-strip{grid-template-columns:minmax(250px,1.5fr) minmax(200px,1fr) auto}.crop-control{background:#e2eee3;border:1px solid #b2cdb8;padding:15px 18px}.crop-control select{font-size:18px}.filter-label{color:#637969}.date-input{border:0;background:transparent;color:var(--ink);font-weight:650;width:100%;padding:3px 0}.primary-button{margin:0;justify-content:center}.layout{display:grid;grid-template-columns:minmax(0,1fr) 0fr;gap:0;transition:grid-template-columns .4s ease,gap .4s ease}.layout.open{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px}.detail-shell{min-width:0;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}.layout.open .detail-shell{opacity:1;visibility:visible}.detail-shell .detail{min-width:285px}.map-outer{height:450px}.bottom-grid{grid-template-columns:1fr 1fr}.history{max-height:290px;overflow:auto}.empty{padding:24px 0;color:#718576;font-size:13px;line-height:1.7}.field{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:650;margin:18px 0}.field input,.field select{padding:13px;border:1px solid #d8e2d9;border-radius:11px;background:var(--surface);color:var(--ink);width:100%}.login{min-height:100vh;display:grid;place-items:center;padding:24px}.login-wrap{display:grid;grid-template-columns:1fr 1fr;max-width:950px;width:100%;min-height:570px;border-radius:30px;overflow:hidden;box-shadow:var(--shadow2);background:#ffffffba;border:1px solid white}.login-art{padding:50px;background:#245844;color:white;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}.login-art:after{content:'';position:absolute;border:1px solid #ffffff20;width:500px;height:500px;border-radius:50%;bottom:-260px;left:-150px;box-shadow:0 0 0 45px #ffffff05,0 0 0 90px #ffffff05}.login-art h1{font-size:44px;letter-spacing:-2px;line-height:1.1}.login-art p{color:#c7dccd;font-size:14px;line-height:1.8}.login-form{padding:45px;align-self:center}.login-form h2{font-size:25px;letter-spacing:-.8px}.login-form p{font-size:13px;color:#768a7c;line-height:1.7}.login-form .primary-button{width:100%;margin-top:8px}.brand-word{font-size:33px;letter-spacing:-2px;font-weight:bold}.login-form .muted-button{width:100%;margin-top:12px}.profile{font-size:12px;color:#5f7866}.form-error{color:#a64234;font-size:12px;line-height:1.6}.dialog{border:1px solid white;border-radius:24px;padding:28px;max-width:480px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow2)}.dialog::backdrop{background:#142b2366;backdrop-filter:blur(5px)}.dialog h2{font-size:23px;letter-spacing:-.7px;margin:0}.dialog p{color:#718576;font-size:12px;line-height:1.6}.dialog-actions{display:flex;justify-content:flex-end;gap:10px}.detail-top .icon-btn{width:30px;height:30px}.context-line{padding:0 22px 8px;font-size:12px;color:#6c8473}.parcel-select{margin:12px 20px}.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.source-grid p{color:#697f70}.source-grid a{color:#245844}.table-scroll{overflow:auto}.table-scroll table{min-width:570px}.compare-track{grid-template-columns:110px 1fr 38px}.toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);padding:13px 20px;border-radius:12px;background:#245844;color:white;z-index:60;font-size:13px}.source-state{font-size:10px;color:#637b6c;background:#edf3ec;padding:5px 8px;border-radius:7px}.notice{color:#7a704e}.card-sub,.priority-text small,.compare-note{color:#738678}.history-row{padding:14px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.8}.history-row small{color:#718576}.header-action{display:flex;justify-content:space-between;gap:10px;align-items:center}.page-selector{max-width:400px;margin-bottom:18px}.dark .crop-control{background:#314738}.dark .field input,.dark .field select{background:var(--surface)}
+@media(max-width:1100px){.filter-strip{grid-template-columns:1fr 1fr}.filter-strip>.primary-button{grid-column:1/-1}.layout.open{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media(max-width:800px){.layout.open{grid-template-columns:minmax(0,1fr)}.layout:not(.open) .detail-shell{height:0}.layout.open .detail-shell{margin-top:14px}.bottom-grid,.source-grid{grid-template-columns:1fr}.login-wrap{grid-template-columns:1fr;max-width:470px}.login-art{padding:28px;min-height:180px}.login-art h1{font-size:30px;margin:15px 0}.login-art p{display:none}.login-form{padding:28px}.profile{display:none}.filter-strip{grid-template-columns:1fr}.filter-strip .select-wrap{grid-column:auto}.map-outer{height:360px}.heading h1{font-size:28px}.detail-shell .detail{min-width:0}.topbar{padding:0 15px}.main{padding:24px 15px}.card-header{flex-wrap:wrap}}
+
+/* Selector de idioma: integrado sin modificar la navegación ni el mapa. */
+.language-switch{display:inline-flex;align-items:center;padding:3px;gap:2px;border:1px solid #dce7dd;border-radius:11px;background:#f0f5f0;flex-shrink:0}
+.language-switch button{min-width:34px;padding:6px 8px;border:0;border-radius:8px;background:transparent;color:#688070;font-size:11px;font-weight:750;line-height:1.25}
+.language-switch button.active{background:#fff;color:#245844;box-shadow:0 1px 5px #1c2f281a}
+.language-switch button:hover:not(.active){background:#e3ece4;color:#245844}
+.login-locale{display:flex;justify-content:flex-end;margin:-10px 0 25px}
+@media(max-width:520px){.top-actions{gap:7px}.topbar{gap:7px}.demo{font-size:10px;padding:6px 7px}.language-switch button{min-width:30px;padding:6px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(()=>{
+
+// Las traducciones se aplican solo a la presentación. Los valores persistidos de
+// cultivos y el contrato con el backend siguen siendo los mismos en ambos idiomas.
+const englishTranslations = {
+  "PLATAFORMA": "PLATFORM",
+  "Resumen": "Overview",
+  "Análisis de zonas y regiones": "Zone and region analysis",
+  "Alternativas de cultivos": "Crop alternatives",
+  "Fuentes": "Sources",
+  "Norte de Ghana": "Northern Ghana",
+  "Espacio del técnico": "Agricultural specialist workspace",
+  "Prototipo frontend": "Frontend prototype",
+  "IAC de demostración.": "Demo suitability scores.",
+  "Registros guardados en este navegador.": "Records stored in this browser.",
+  "● Demostración": "● Demo",
+  "Técnico": "Specialist",
+  "Inteligencia agrícola · Norte de Ghana": "Agricultural intelligence · Northern Ghana",
+  "Anticipar. Priorizar. Proteger.": "Anticipate. Prioritize. Protect.",
+  "Cada parcela, su cultivo. Cada decisión, un motivo.": "Every plot, its crop. Every decision, a reason.",
+  "Una lectura del suelo orientada a tus cultivos.": "Soil insights tailored to your crops.",
+  "IAC simulado · No representa rendimiento real ni predicción futura.": "Simulated IAC · Not a measure of actual yield or future predictions.",
+  "Fuentes y metodología": "Sources and methodology",
+  "El navegador no permite guardar datos. Los registros se conservarán solo durante esta sesión.": "Your browser cannot save data. Records will only be kept for this session.",
+  "Principal": "Main navigation",
+  "Abrir menú": "Open menu",
+  "Cerrar sesión": "Sign out",
+  "NORTE DE GHANA": "NORTHERN GHANA",
+  "Conocer la tierra.": "Understand the land.",
+  "Cuidar lo que viene.": "Protect what comes next.",
+  "Un espacio para registrar cultivos, analizar el suelo y decidir dónde actuar primero.": "A place to register crops, assess soils and decide where to act first.",
+  "Bienvenido a asase.": "Welcome to asase.",
+  "Accede a tus parcelas y al análisis de cultivos.": "Access your plots and crop assessments.",
+  "Correo electrónico": "Email address",
+  "Contraseña": "Password",
+  "Iniciar sesión": "Sign in",
+  "Explorar como técnico de demostración": "Explore the specialist demo",
+  "Acceso de demostración: no verifica credenciales. Utiliza datos ficticios. La contraseña no se guarda ni se envía.": "Demo access does not verify credentials. It uses sample data. Your password is neither saved nor sent.",
+  "Mínimo 6 caracteres": "At least 6 characters",
+  "CULTIVO A ESTUDIAR": "CROP TO ASSESS",
+  "Cultivos registrados por parcela": "Crops registered by plot",
+  "Fecha de consulta · hasta ": "Assessment date · through ",
+  "Registrar cultivo": "Register crop",
+  "Mapa del norte de Ghana": "Map of Northern Ghana",
+  "Selecciona una región para abrir su análisis.": "Select a region to view its assessment.",
+  "Cultivos de tus parcelas": "Your registered crops",
+  "Mapa de las cinco regiones administrativas del norte de Ghana. Pulsa una región para ver su análisis.": "Map of the five administrative regions of Northern Ghana. Select a region to view its assessment.",
+  "Índice de aptitud ilustrativo": "Illustrative suitability index",
+  "GHANA · NORTE": "GHANA · NORTH",
+  "Norte de Ghana · 5 regiones": "Northern Ghana · 5 regions",
+  "Límites regionales reales · IAC de demostración": "Real regional boundaries · Demo IAC",
+  "Ampliar mapa": "Zoom in",
+  "Alejar mapa": "Zoom out",
+  "Restablecer mapa": "Reset map",
+  "Prioridad": "Priority",
+  "prioridad": "priority",
+  "ALTA": "HIGH",
+  "Alta": "High",
+  "Media": "Medium",
+  "Baja": "Low",
+  "Sin datos": "No data",
+  "sin datos": "no data",
+  " IAC simulado ": " simulated IAC ",
+  "Indicador de Aptitud de Cultivo": "Crop Suitability Indicator",
+  "Cerrar análisis": "Close assessment",
+  "Sin cultivo registrado": "No registered crop",
+  "Referencia regional": "Regional reference",
+  "Parcela analizada": "Plot being assessed",
+  "Aptitud del cultivo": "Crop suitability",
+  "Sin evaluación": "Not assessed",
+  "Ejemplo simulado": "Simulated example",
+  "Lectura del indicador": "Understanding the indicator",
+  "El IAC expresa aptitud relativa para un cultivo y un suelo. No equivale a toneladas por hectárea ni garantiza la productividad de la cosecha.": "The IAC measures relative crop–soil suitability. It does not indicate tonnes per hectare or guarantee crop yields.",
+  "Registrar cultivo aquí": "Register crop here",
+  "Ver fuentes": "View sources",
+  "No hay cultivos registrados para esta región en la fecha seleccionada.": "No crops have been registered in this region by the selected date.",
+  "Registra un cultivo para analizar esta parcela.": "Register a crop to assess this plot.",
+  "Variabilidad de la precipitación": "Rainfall variability",
+  "Disponibilidad de agua estacional": "Seasonal water availability",
+  "Estrés hídrico estacional": "Seasonal water stress",
+  "Distribución irregular de las lluvias": "Irregular rainfall distribution",
+  "Conservación de la materia orgánica": "Organic matter conservation",
+  "Resultado ilustrativo para ": "Illustrative result for ",
+  ", pendiente de evaluación del backend.": ", pending backend assessment.",
+  "Dónde actuar primero": "Where to act first",
+  "Tus parcelas, según la aptitud de su cultivo registrado.": "Your plots, ranked by suitability for their registered crops.",
+  "Comparación regional para ": "Regional comparison for ",
+  "Menor IAC, mayor prioridad.": "Lower IAC means higher priority.",
+  "Aún no hay cultivos registrados para esta fecha. Añade una parcela y su cultivo para empezar a priorizar.": "No crops have been registered by this date. Add a plot and crop to start setting priorities.",
+  "Registrar mi primer cultivo": "Register my first crop",
+  "Historial de cultivos": "Crop history",
+  " registros": " records",
+  "Siembra registrada y cambios de cultivo por parcela.": "Recorded sowing dates and crop changes by plot.",
+  "Tu historial aparecerá aquí cuando registres el primer cultivo.": "Your history will appear here after you register your first crop.",
+  "Planificado": "Planned",
+  "Análisis por región": "Analysis by region",
+  "En el modo de cultivos registrados, cada región toma el menor IAC de sus parcelas como referencia de prioridad. La geometría del mapa es regional; no representa los límites de cada parcela.": "When viewing registered crops, each region uses its plots’ lowest IAC to set its priority. Map geometry shows regional boundaries, not individual plot boundaries.",
+  "Región": "Region",
+  "región": "region",
+  "Cultivo de referencia": "Reference crop",
+  "Parcelas": "Plots",
+  "Análisis": "Assessment",
+  "Sin registros": "No records",
+  "Ver región": "View region",
+  "Región para comparar": "Region to compare",
+  "Selecciona una región": "Select a region",
+  "Alternativas en ": "Alternatives in ",
+  "Mismo suelo de referencia, doce cultivos. Comparación ilustrativa; no es una recomendación de rotación validada.": "Same reference soil, twelve crops. This is an illustrative comparison, not a validated crop rotation recommendation.",
+  "Los motivos e índices proceden del adaptador de demostración. Cada parcela necesita sus propios datos de suelo para una evaluación real.": "Scores and explanations come from the demo adapter. Each plot requires its own soil data for a real assessment.",
+  "Registrar cultivo en esta región": "Register crop in this region",
+  "Selecciona una región para comparar la aptitud de los doce cultivos.": "Select a region to compare the suitability of twelve crops.",
+  "Incorporada": "Included",
+  "Cartografía": "Mapping",
+  "Límites de Upper West, Upper East, North East, Northern y Savannah procedentes de amCharts 4 Geodata, Ghana Low. Polígonos proyectados y simplificados para este mapa.": "The boundaries of Upper West, Upper East, North East, Northern and Savannah come from amCharts 4 Geodata, Ghana Low. Polygons were projected and simplified for this map.",
+  "Licencia CC BY 4.0. El mapa no delimita parcelas y no proporciona información catastral.": "CC BY 4.0 license. This map does not show plot boundaries or provide cadastral information.",
+  "Datos introducidos por el técnico": "Data entered by the specialist",
+  "Parcelas e historial": "Plots and history",
+  "Nombre de parcela, región, cultivo y fecha: formulario de registro. Se guardan en este navegador. Para una misma parcela, se utiliza el último registro cuya fecha no supere la consulta.": "Plot name, region, crop and date are entered in the registration form and stored in this browser. The most recent record on or before the selected date is used for each plot.",
+  "En esta versión, el nombre identifica la parcela dentro de su región. Las parcelas aún no tienen geometría ni análisis de suelo individual.": "In this version, the plot name identifies it within its region. Plots do not yet have their own geometry or individual soil assessments.",
+  "Simulación · sin backend": "Simulation · no backend",
+  "IAC, motivos y prioridad": "IAC, explanations and priority",
+  "Índices y motivos generados por un adaptador de demostración en el frontend. No proceden de NASA ni de mediciones de campo. La prioridad ordena el IAC de menor a mayor; alta <58, media 58–70, baja ≥71. Umbrales de interfaz sin validación agronómica.": "Scores and explanations are generated by a demo adapter in the frontend. They are not derived from NASA or field measurements. Priority ranks IAC from lowest to highest: high <58, medium 58–70, low ≥71. These UI thresholds have not been agronomically validated.",
+  "El calendario limita la consulta a 90 días y selecciona registros vigentes. No modifica ni predice el estado futuro del suelo. La futura función recibirá cultivo y suelo y devolverá IAC y motivo.": "The date picker limits assessments to the next 90 days and uses records effective on that date. It does not modify or forecast future soil conditions. A future function will accept crop and soil inputs and return IAC and an explanation.",
+  "Fuentes previstas · no conectadas": "Planned sources · not connected",
+  "Clima y suelo": "Climate and soil",
+  "NASA POWER y SoilGrids son fuentes candidatas del proyecto. Esta versión no consume sus datos, por lo que no se les atribuyen los resultados mostrados.": "NASA POWER and SoilGrids are candidate data sources. This version does not use their data, and the displayed results are not attributed to them.",
+  "Antes de integrar datos se documentarán variables, unidades, resolución, fecha de actualización y limitaciones.": "Before integration, variables, units, resolution, update dates and limitations will be documented.",
+  "Registrar un cultivo": "Register a crop",
+  "Cerrar registro": "Close registration",
+  "Asocia un cultivo a tu parcela. Para cambiarlo, utiliza el mismo nombre de parcela y región.": "Link a crop to your plot. To record a change, use the same plot name and region.",
+  "Nombre o código de parcela": "Plot name or code",
+  "Ej. Parcela Tamale 01": "e.g. Tamale plot 01",
+  "Cultivo": "Crop",
+  "Selecciona un cultivo": "Select a crop",
+  "Fecha de siembra o cambio": "Sowing or change date",
+  "Cancelar": "Cancel",
+  "Guardar cultivo": "Save crop",
+  "Revisa el nombre, la región, el cultivo y la fecha.": "Check the plot name, region, crop and date.",
+  "Ya existe un registro para esa parcela en esa fecha. Elige otra fecha para registrar un cambio.": "A record already exists for this plot on that date. Choose another date to record a crop change.",
+  "Cultivo registrado. Historial y prioridades actualizados.": "Crop registered. History and priorities updated.",
+  "Selecciona una fecha dentro de los próximos 90 días.": "Select a date within the next 90 days.",
+  "Maíz": "Maize",
+  "Sorgo": "Sorghum",
+  "Mijo": "Millet",
+  "Arroz": "Rice",
+  "Cacahuete": "Groundnut",
+  "Ñame": "Yam",
+  "Caupi": "Cowpea",
+  "Soja": "Soybean",
+  "Yuca": "Cassava",
+  "Boniato": "Sweet potato",
+  "Guisante bámbara": "Bambara groundnut",
+  "Algodón": "Cotton",
+  "maíz": "maize",
+  "sorgo": "sorghum",
+  "mijo": "millet",
+  "arroz": "rice",
+  "cacahuete": "groundnut",
+  "ñame": "yam",
+  "caupi": "cowpea",
+  "soja": "soybean",
+  "yuca": "cassava",
+  "boniato": "sweet potato",
+  "guisante bámbara": "bambara groundnut",
+  "algodón": "cotton"
+};
+const translationPairs = Object.entries(englishTranslations).sort((a,b)=>b[0].length-a[0].length);
+let language = (()=>{try{return localStorage.getItem('asase.language')==='en'?'en':'es'}catch{return 'es'}})();
+function translateString(input){
+  if(language!=='en'||typeof input!=='string') return input;
+  // Traducción de frases enteras y, para textos dinámicos, de sus segmentos.
+  if(Object.hasOwn(englishTranslations,input)) return englishTranslations[input];
+  let result=input;
+  for(const [es,en] of translationPairs) if(result.includes(es)) result=result.split(es).join(en);
+  return result;
+}
+function languageSwitcher(){return `<div class="language-switch" role="group" aria-label="Idioma / Language"><button type="button" data-language="es" lang="es" aria-pressed="${language==='es'}" class="${language==='es'?'active':''}">ES</button><button type="button" data-language="en" lang="en" aria-pressed="${language==='en'}" class="${language==='en'?'active':''}">EN</button></div>`}
+function translateUI(root){
+  document.documentElement.lang=language;
+  document.title=language==='en'?'asase. — Intelligence to protect agricultural productivity':'asase. — Inteligencia para proteger la productividad agrícola';
+  if(language!=='en')return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let node;
+  while(node=walker.nextNode()){
+    if(node.parentElement?.closest('.language-switch')) continue;
+    node.nodeValue=translateString(node.nodeValue);
+  }
+  for(const el of root.querySelectorAll('[aria-label],[title],[placeholder]')){
+    if(el.closest('.language-switch'))continue;
+    for(const attr of ['aria-label','title','placeholder']){
+      const value=el.getAttribute(attr);
+      if(value!==null)el.setAttribute(attr,translateString(value));
+    }
+  }
+}
+
+const $=s=>document.querySelector(s);const icons={
+ grid:'<rect x="3" y="3" width="7" height="7" rx="1.3"/><rect x="14" y="3" width="7" height="7" rx="1.3"/><rect x="3" y="14" width="7" height="7" rx="1.3"/><rect x="14" y="14" width="7" height="7" rx="1.3"/>',
+ map:'<path d="M3 5.6 9 3l6 3 6-2.6v15L15 21l-6-3-6 2.6z"/><path d="M9 3v15M15 6v15"/>',
+ sprout:'<path d="M12 22V12"/><path d="M12 12C5 12 3 8 3 4c7 0 9 3 9 8Zm0 4c0-6 3-9 9-9 0 6-3 9-9 9Z" transform="translate(0 5) scale(1 .8)"/>',
+ cycle:'<path d="M21 11a9 9 0 0 0-15.7-5.8L3 8"/><path d="M3 3v5h5"/><path d="M3 13a9 9 0 0 0 15.7 5.8L21 16"/><path d="M21 21v-5h-5"/>',
+ alert:'<path d="M12 9v4m0 4h.01"/><path d="m10.3 3.5-8.8 15.2A2 2 0 0 0 3.2 21h17.6a2 2 0 0 0 1.7-2.3L13.7 3.5a2 2 0 0 0-3.4 0Z"/>',
+ pin:'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+ calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+ chevron:'<path d="m6 9 6 6 6-6"/>',
+ layers:'<path d="m12 2 9 5-9 5-9-5 9-5Zm-9 10 9 5 9-5M3 17l9 5 9-5"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
+ moon:'<path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>',
+ arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
+ droplet:'<path d="M12 22a8 8 0 0 0 8-8c0-5-8-12-8-12S4 9 4 14a8 8 0 0 0 8 8Z"/>',
+ temp:'<path d="M14 14.8V5a3 3 0 0 0-6 0v9.8a5 5 0 1 0 6 0Z"/><path d="M11 11v7"/>',
+ flask:'<path d="M9 3h6M10 3v8l-6 8a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-6-8V3M8 16h8"/>',
+ chart:'<path d="M4 20V9m5 11V4m5 16v-7m5 7V8"/>',
+ info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9h.01"/>',
+ check:'<path d="m5 12 4 4L19 6"/>',
+ shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+ close:'<path d="M5 5 19 19M19 5 5 19"/>',
+ wind:'<path d="M3 8h13a3 3 0 1 0-3-3M2 12h19a3 3 0 1 1-3 3M4 16h6a3 3 0 1 1-3 3"/>',
+ trend:'<path d="m3 17 7-7 4 4 7-7"/><path d="M15 7h6v6"/>',
+ fields:'<path d="m2 18 10-15 10 15M5 21h14M8 15h8M10 10h4"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+ download:'<path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/>'
+};
+const I=(n)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[n]||icons.grid}</svg>`;
+const data=[
+  {id:1,geo:'GH-UW',name:'Upper West',city:'Wa',score:78,issue:'Variabilidad de la precipitación'},
+  {id:2,geo:'GH-UE',name:'Upper East',city:'Bolgatanga',score:66,issue:'Disponibilidad de agua estacional'},
+  {id:3,geo:'GH-NE',name:'North East',city:'Nalerigu',score:49,issue:'Estrés hídrico estacional'},
+  {id:4,geo:'GH-NP',name:'Northern',city:'Tamale',score:68,issue:'Distribución irregular de las lluvias'},
+  {id:5,geo:'GH-SV',name:'Savannah',city:'Damongo',score:54,issue:'Conservación de la materia orgánica'}
+];
+// El alcance del prototipo son exclusivamente las cinco regiones del norte de Ghana.
+const getVisible=()=>data;
+const zoneName=p=>p.name;
+
+const cropNames=['Maíz','Sorgo','Mijo','Arroz','Cacahuete','Ñame','Caupi','Soja','Yuca','Boniato','Guisante bámbara','Algodón'];
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const today=iso(new Date()),endDate=(()=>{let d=new Date();d.setDate(d.getDate()+90);return iso(d)})();
+let storageWarning=false;
+function readStore(k,fallback){try{return JSON.parse(localStorage.getItem(k))||fallback}catch{return fallback}}
+let records=readStore('asase.records.v2',[]);if(!Array.isArray(records))records=[];
+records=records.filter(r=>r&&typeof r.parcel==='string'&&cropNames.includes(r.crop)&&data.some(p=>p.id===r.region)&&/^\d{4}-\d{2}-\d{2}$/.test(r.date));
+const state={view:'overview',crop:'registered',date:today,selected:null,parcel:null,overlay:'priority',zoom:1,menu:false,dark:false,user:null};
+const navItems=[['overview','grid','Resumen'],['regions','map','Análisis de zonas y regiones'],['crops','sprout','Alternativas de cultivos'],['sources','info','Fuentes']];
+const activeRecords=()=>{const latest=new Map();records.filter(r=>r.date<=state.date).sort((a,b)=>a.date.localeCompare(b.date)||a.at.localeCompare(b.at)).forEach(r=>latest.set(r.region+'|'+r.parcel.toLocaleLowerCase(),r));return [...latest.values()]};
+const regionRecords=p=>activeRecords().filter(r=>r.region===p.id);
+// Adaptador de demostración. Sustituir exclusivamente evaluateIAC por la llamada al backend.
+// Contrato esperado: evaluateIAC(cultivo, suelo) -> { iac: number|null, motivo: string }.
+// No hay datos satelitales, modelo agronómico ni predicción temporal conectados.
+function evaluateIAC(crop,soil){const c=cropNames.indexOf(crop);if(c<0)return {iac:null,motivo:'Registra un cultivo para analizar esta parcela.'};return {iac:Math.max(18,Math.min(94,soil.score+((c*17+soil.id*11+c*soil.id*7)%39)-19)),motivo:soil.issue+'. Resultado ilustrativo para '+crop.toLowerCase()+', pendiente de evaluación del backend.'}}
+function evaluations(p){return state.crop==='registered'?regionRecords(p).map(r=>({...evaluateIAC(r.crop,p),crop:r.crop,parcel:r.parcel,record:r})): [{...evaluateIAC(state.crop,p),crop:state.crop,parcel:null}];}
+function result(p){const rows=evaluations(p).filter(r=>r.iac!==null).sort((a,b)=>a.iac-b.iac);return rows[0]||{iac:null,motivo:'No hay cultivos registrados para esta región en la fecha seleccionada.',crop:null}}
+const score=p=>result(p).iac;
+const level=s=>s===null?'none':s<58?'high':s<71?'medium':'low';
+const risk=p=>level(score(p));
+const names={high:'Alta',medium:'Media',low:'Baja',none:'Sin datos'},colors={high:'#d77c70',medium:'#dcb165',low:'#74a28a',none:'#bccbc0'};
+const selected=()=>data.find(p=>p.id===state.selected);
+const niceDate=d=>new Date(d+'T12:00:00').toLocaleDateString(language==='en'?'en-GB':'es-ES');
+const northernPaths={
+  "GH-UW":"M393,82L390,88L387,107L378,112L378,118L365,122L361,135L364,146L385,155L388,167L364,182L342,210L355,219L357,225L336,232L331,238L335,259L333,266L270,266L258,273L247,268L188,272L160,277L158,286L123,296L111,293L99,282L112,265L107,259L107,241L101,233L99,209L107,198L91,191L89,186L95,178L79,158L70,140L76,131L72,127L80,115L84,105L95,95L92,83L108,81L179,80L189,83L210,81L258,81L267,83L325,83L325,78L367,78L367,82L393,82Z",
+  "GH-UE":"M388,167L385,155L364,146L361,135L365,122L378,118L378,112L387,107L390,88L393,82L399,85L453,85L462,83L553,85L564,96L571,96L577,87L591,84L602,77L606,67L617,64L638,65L638,56L663,61L670,67L682,71L697,67L703,74L705,86L695,89L693,110L682,121L679,130L656,134L643,139L605,145L592,142L589,151L574,153L559,153L554,156L544,139L529,138L517,148L505,149L501,156L481,156L456,168L447,175L436,179L438,192L434,195L402,178L402,166L388,167Z",
+  "GH-NE":"M435,233L422,232L406,224L386,221L357,225L355,219L342,210L364,182L392,166L402,166L402,178L434,195L438,192L436,179L447,175L456,168L481,156L501,156L505,149L517,148L529,138L544,139L554,156L559,153L574,153L589,151L592,142L605,145L643,139L656,134L679,130L686,139L705,144L714,151L727,156L740,174L759,174L769,189L780,190L775,205L774,222L788,228L787,233L775,235L778,248L770,247L762,241L755,244L713,243L724,236L720,217L712,211L715,195L707,185L695,187L692,194L669,192L658,195L628,193L619,196L612,191L591,190L591,199L582,203L570,213L556,209L540,211L515,220L504,235L484,244L485,237L478,226L459,212L458,220L439,225L435,233Z",
+  "GH-NP":"M778,248L769,272L769,280L781,293L778,303L752,304L749,317L752,325L765,325L775,315L793,314L806,318L807,325L821,331L820,343L809,352L814,359L798,385L803,397L811,403L808,423L784,424L784,433L764,435L755,432L740,432L730,446L737,456L722,462L729,471L720,475L725,487L750,484L755,490L743,497L742,510L732,511L690,494L678,496L670,507L659,493L639,499L650,485L649,474L658,467L648,460L626,464L620,455L595,438L600,433L617,435L631,429L634,423L629,414L646,408L656,401L655,377L642,372L636,365L620,357L604,357L577,347L576,343L548,344L546,348L527,344L494,346L490,340L473,339L461,343L446,342L429,344L432,327L421,310L405,298L416,294L416,287L410,281L412,270L446,269L450,263L447,249L458,243L435,234L435,231L439,225L458,220L459,212L478,226L485,237L484,244L504,235L515,220L540,211L556,209L570,213L582,203L591,199L591,190L612,191L619,196L628,193L658,195L669,192L692,194L695,187L707,185L715,195L712,211L720,217L724,236L713,243L755,244L762,241L770,247L778,248Z",
+  "GH-SV":"M435,233L435,234L458,243L447,249L450,263L446,269L412,270L410,281L416,287L416,294L405,298L421,310L432,327L429,344L446,342L461,343L473,339L490,340L494,346L527,344L546,348L548,344L576,343L577,347L604,357L620,357L636,365L642,372L655,377L656,401L646,408L629,414L634,423L631,429L617,435L600,433L595,438L620,455L626,464L648,460L658,467L649,474L650,485L639,499L659,493L670,507L656,515L639,511L620,512L620,525L603,523L578,516L563,506L541,496L520,495L512,507L477,511L472,531L480,541L463,548L451,548L449,533L424,502L429,492L430,476L452,463L452,443L434,444L405,429L382,430L375,442L370,443L341,441L337,448L326,451L310,446L297,450L292,462L295,476L289,482L297,496L309,495L324,504L318,511L294,507L288,513L274,523L258,525L243,525L236,522L232,514L206,502L204,489L190,471L190,463L171,449L162,437L150,429L141,427L135,405L128,401L128,392L103,386L103,371L111,367L116,359L128,355L117,347L123,335L121,316L105,305L111,293L123,296L158,286L160,277L188,272L247,268L258,273L270,266L333,266L335,259L331,238L336,232L357,225L386,221L406,224L422,232L435,233Z"
+};
+const northernLabels={
+  'GH-UW':[233,173,'Upper West'],
+  'GH-UE':[540,107,'Upper East'],
+  'GH-NE':[612,224,'North East'],
+  'GH-NP':[582,343,'Northern'],
+  'GH-SV':[346,385,'Savannah']
+};
+function mapSvg(){
+  const polygons=getVisible().map(p=>{
+    const level=risk(p);
+    const fill=colors[level];
+    const [x,y,label]=northernLabels[p.geo];
+    const selectedRegion=state.selected===p.id;
+    const width=Math.max(90,label.length*8.3+23);
+    const labelX=Math.max(2,Math.min(900-width-2,x-width/2));
+    return `<g class="geo-region-item ${selectedRegion?'chosen':''}" role="button" data-parcel="${p.id}" tabindex="0" aria-label="Región ${p.name}; IAC simulado ${score(p)??'sin datos'}; prioridad ${names[level]}">
+      <title>${p.name} · Índice de aptitud ilustrativo ${score(p)??'—'}/100 · Prioridad ${names[level]}</title>
+      <path class="geo-region ${selectedRegion?'selected':''}" d="${northernPaths[p.geo]}" fill="${fill}" />
+    </g>`;
+  }).join('');
+  // Etiquetas en una capa superior para que ninguna región vecina las tape.
+  const labelItems=getVisible().map(p=>{
+    const [x,y,label]=northernLabels[p.geo];
+    const width=Math.max(90,label.length*8.3+23);
+    const labelX=Math.max(2,Math.min(900-width-2,x-width/2));
+    return `<g data-parcel="${p.id}" aria-hidden="true" style="cursor:pointer"><rect style="pointer-events:all" class="region-label-bg" x="${labelX}" y="${y-16}" width="${width}" height="29" rx="10" /><text class="region-label" x="${labelX+width/2}" y="${y+2}" text-anchor="middle">${label}</text></g>`;
+  }).join('');
+  return `<svg class="map-grid ghana-map northern-map" viewBox="0 0 900 620" role="group" aria-label="Mapa de las cinco regiones administrativas del norte de Ghana. Pulsa una región para ver su análisis.">
+    <defs>
+      <linearGradient id="north-map-base" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f0f5ed"/><stop offset="1" stop-color="#dfebe2"/></linearGradient>
+      <pattern id="north-map-grid" width="52" height="52" patternUnits="userSpaceOnUse"><path d="M52 0H0V52" fill="none" stroke="#a3b9a6" stroke-width=".7" opacity=".2" /></pattern>
+      <filter id="regionShadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#4b7758" flood-opacity=".16"/></filter>
+    </defs>
+    <rect width="900" height="620" fill="url(#north-map-base)"/>
+    <rect width="900" height="620" fill="url(#north-map-grid)"/>
+    <path d="M-20 350Q105 310 180 390T460 390T920 328" fill="none" stroke="#b8d6d1" stroke-width="5" opacity=".5"/>
+    <path d="M-20 367Q110 327 178 405T457 408T920 343" fill="none" stroke="#f9fffd" stroke-width="1.3" opacity=".7"/>
+    <path d="M35 570Q285 515 430 574T925 540" fill="none" stroke="#b2cdb8" stroke-width="2" opacity=".36"/>
+    <g transform="translate(450 310) scale(${state.zoom}) translate(-450 -310)">
+      <g filter="url(#regionShadow)">${polygons}</g>
+      <g>${labelItems}</g>
+    </g>
+    <text x="40" y="592" fill="#819789" opacity=".65" font-size="12" letter-spacing="2.1" font-weight="700">GHANA · NORTE</text>
+  </svg>`;
+}
+
+
+/* VIEWS */
+function options(items,value){return items.map(([v,n])=>`<option value="${esc(v)}" ${String(v)===String(value)?'selected':''}>${esc(n)}</option>`).join('')}
+function filters(){return `<div class="filter-strip"><label class="select-wrap crop-control"><span class="select-icon">${I('sprout')}</span><span class="select-content"><span class="filter-label">CULTIVO A ESTUDIAR</span><select id="crop">${options([['registered','Cultivos registrados por parcela'],...cropNames.map(c=>[c,c])],state.crop)}</select></span>${I('chevron').replace('<svg','<svg width="18" height="18"')}</label><label class="select-wrap"><span class="select-icon">${I('calendar')}</span><span class="select-content"><span class="filter-label">Fecha de consulta · hasta ${niceDate(endDate)}</span><input class="date-input" id="date" type="date" min="${today}" max="${endDate}" value="${state.date}"></span></label><button class="primary-button" data-register>${I('sprout')} Registrar cultivo</button></div>`}
+function detail(){const p=selected();if(!p)return '';const rows=evaluations(p);let r=rows.find(x=>x.record?.id===state.parcel)||result(p);const s=r.iac,k=level(s);return `<article class="card detail"><div class="detail-top"><span class="detail-kicker">Indicador de Aptitud de Cultivo</span><button class="icon-btn" data-close-detail aria-label="Cerrar análisis">${I('close')}</button></div><h2 class="parcel-name">${p.name}</h2><div class="context-line">${esc(r.crop||'Sin cultivo registrado')} ${r.parcel?'· '+esc(r.parcel):'· Referencia regional'}</div>${state.crop==='registered'&&rows.length?`<label class="field parcel-select">Parcela analizada<select id="detail-parcel">${options(rows.map(x=>[x.record.id,x.parcel+' · '+x.crop]),r.record?.id)}</select></label>`:''}<div class="score-block"><div><div class="score-numeral">${s??'—'}<span>/100</span></div><div class="score-caption">Aptitud del cultivo · ${s===null?'Sin evaluación':'Ejemplo simulado'}</div></div><div class="ring" style="--pct:${s??0};--ringColor:${colors[k]}"><div class="ring-inner"><strong>${names[k]}</strong><small>Prioridad</small></div></div></div><div class="insight">${I('info')}<span>${esc(r.motivo)}</span></div><div class="section-label">Lectura del indicador</div><div class="context-line" style="line-height:1.8;padding-bottom:20px">El IAC expresa aptitud relativa para un cultivo y un suelo. No equivale a toneladas por hectárea ni garantiza la productividad de la cosecha.</div><div style="padding:0 20px 22px;display:flex;gap:8px;flex-wrap:wrap"><button class="primary-button" data-register>Registrar cultivo aquí</button><button class="muted-button" data-view="sources">Ver fuentes</button></div></article>`}
+function mapCard(){return `<section class="card"><div class="card-header"><div><h2 class="card-headline">Mapa del norte de Ghana</h2><p class="card-sub">Selecciona una región para abrir su análisis.</p></div><span class="source-state">${state.crop==='registered'?'Cultivos de tus parcelas':esc(state.crop)}</span></div><div class="map-outer">${mapSvg()}<div class="map-top-left">${I('layers')} Norte de Ghana · 5 regiones</div><div class="map-bottom-left">Límites regionales reales · IAC de demostración</div><div class="map-zoom"><button data-zoom="in" aria-label="Ampliar mapa">+</button><button data-zoom="out" aria-label="Alejar mapa">−</button><button data-zoom="reset" aria-label="Restablecer mapa">⌖</button></div><div class="map-compass"><span>N</span></div></div><div class="legend"><b>Prioridad</b>${Object.entries(names).map(([k,n])=>`<span><i class="legend-dot" style="background:${colors[k]}"></i>${n}</span>`).join('')}</div></section>`}
+function priorityCard(){const ranked=data.flatMap(p=>evaluations(p).map(r=>({...r,region:p}))).filter(r=>r.iac!==null).sort((a,b)=>a.iac-b.iac);return `<section class="card bottom-card"><h2 class="card-headline">Dónde actuar primero</h2><p class="card-sub">${state.crop==='registered'?'Tus parcelas, según la aptitud de su cultivo registrado.':'Comparación regional para '+esc(state.crop)+'.'} Menor IAC, mayor prioridad.</p><div class="priority-list">${ranked.length?ranked.map((r,i)=>`<button class="priority-item" data-parcel="${r.region.id}" data-record="${esc(r.record?.id||'')}"><span class="priority-icon">${i+1}</span><span class="priority-text"><strong>${esc(r.parcel||r.region.name)}</strong><small>${r.parcel?r.region.name+' · ':''}${esc(r.crop)}</small></span><span class="priority-badge ${level(r.iac)}">${names[level(r.iac)]}</span><span class="mini-score">${r.iac}</span>${I('arrow')}</button>`).join(''):`<div class="empty">Aún no hay cultivos registrados para esta fecha. Añade una parcela y su cultivo para empezar a priorizar.</div><button class="muted-button" data-register>Registrar mi primer cultivo</button>`}</div></section>`}
+function historyCard(){return `<section class="card bottom-card"><div class="header-action"><h2 class="card-headline">Historial de cultivos</h2><span class="source-state">${records.length} registros</span></div><p class="card-sub">Siembra registrada y cambios de cultivo por parcela.</p><div class="history">${records.length?[...records].reverse().map(r=>`<div class="history-row"><strong>${esc(r.parcel)}</strong> · ${esc(r.crop)}<br><small>${data.find(p=>p.id===r.region).name} · ${niceDate(r.date)}${r.date>today?' · Planificado':''}</small></div>`).join(''):'<div class="empty">Tu historial aparecerá aquí cuando registres el primer cultivo.</div>'}</div></section>`}
+function dashboard(){return `<div class="layout ${state.selected?'open':''}" id="map-layout"><div>${mapCard()}</div><div class="detail-shell" id="detail-shell" ${state.selected?'':'inert'}>${detail()}</div></div><div class="bottom-grid">${priorityCard()}${historyCard()}</div>`}
+function regionView(){return `<section class="card view-panel"><h2>Análisis por región</h2><p>En el modo de cultivos registrados, cada región toma el menor IAC de sus parcelas como referencia de prioridad. La geometría del mapa es regional; no representa los límites de cada parcela.</p><div class="table-scroll"><table class="region-table"><thead><tr><th>Región</th><th>Cultivo de referencia</th><th>Parcelas</th><th>IAC</th><th>Análisis</th></tr></thead><tbody>${[...data].sort((a,b)=>(score(a)??101)-(score(b)??101)).map(p=>`<tr><td>${p.name}</td><td>${esc(result(p).crop||'Sin registros')}</td><td>${regionRecords(p).length}</td><td>${score(p)??'—'}</td><td><button class="muted-button" data-parcel="${p.id}">Ver región</button></td></tr>`).join('')}</tbody></table></div></section>`}
+function cropView(){const p=selected();return `<label class="field page-selector">Región para comparar<select id="compare-region">${options([['','Selecciona una región'],...data.map(p=>[p.id,p.name])],state.selected||'')}</select></label>${p?`<section class="card view-panel"><h2>Alternativas en ${p.name}</h2><p>Mismo suelo de referencia, doce cultivos. Comparación ilustrativa; no es una recomendación de rotación validada.</p><div class="compare-row">${cropNames.map(c=>({c,...evaluateIAC(c,p)})).sort((a,b)=>b.iac-a.iac).map(r=>`<div class="compare-track"><span class="compare-name">${r.c}</span><div class="bar-track"><div class="bar-fill" style="width:${r.iac}%"></div></div><span class="compare-number">${r.iac}</span></div>`).join('')}</div><p class="compare-note">Los motivos e índices proceden del adaptador de demostración. Cada parcela necesita sus propios datos de suelo para una evaluación real.</p><button class="primary-button" data-register>Registrar cultivo en esta región</button></section>`:'<section class="card view-panel"><p>Selecciona una región para comparar la aptitud de los doce cultivos.</p></section>'}`}
+function sources(){return `<div class="source-grid"><article class="card view-panel"><span class="source-state">Incorporada</span><h2 style="margin-top:18px">Cartografía</h2><p>Límites de Upper West, Upper East, North East, Northern y Savannah procedentes de amCharts 4 Geodata, Ghana Low. Polígonos proyectados y simplificados para este mapa.</p><a href="https://github.com/amcharts/amcharts4-geodata" target="_blank" rel="noopener">amCharts Geodata ↗</a><p>Licencia CC BY 4.0. El mapa no delimita parcelas y no proporciona información catastral.</p></article><article class="card view-panel"><span class="source-state">Datos introducidos por el técnico</span><h2 style="margin-top:18px">Parcelas e historial</h2><p>Nombre de parcela, región, cultivo y fecha: formulario de registro. Se guardan en este navegador. Para una misma parcela, se utiliza el último registro cuya fecha no supere la consulta.</p><p>En esta versión, el nombre identifica la parcela dentro de su región. Las parcelas aún no tienen geometría ni análisis de suelo individual.</p></article><article class="card view-panel"><span class="source-state">Simulación · sin backend</span><h2 style="margin-top:18px">IAC, motivos y prioridad</h2><p>Índices y motivos generados por un adaptador de demostración en el frontend. No proceden de NASA ni de mediciones de campo. La prioridad ordena el IAC de menor a mayor; alta &lt;58, media 58–70, baja ≥71. Umbrales de interfaz sin validación agronómica.</p><p>El calendario limita la consulta a 90 días y selecciona registros vigentes. No modifica ni predice el estado futuro del suelo. La futura función recibirá cultivo y suelo y devolverá IAC y motivo.</p></article><article class="card view-panel"><span class="source-state">Fuentes previstas · no conectadas</span><h2 style="margin-top:18px">Clima y suelo</h2><p>NASA POWER y SoilGrids son fuentes candidatas del proyecto. Esta versión no consume sus datos, por lo que no se les atribuyen los resultados mostrados.</p><p>Antes de integrar datos se documentarán variables, unidades, resolución, fecha de actualización y limitaciones.</p></article></div>`}
+function login(){return `<main class="login"><div class="login-wrap"><section class="login-art"><div class="brand-word">asase.</div><div><div class="eyebrow" style="color:#bdd6c3">NORTE DE GHANA</div><h1>Conocer la tierra.<br>Cuidar lo que viene.</h1><p>Un espacio para registrar cultivos, analizar el suelo y decidir dónde actuar primero.</p></div><span style="font-size:11px;color:#bdd6c3">Agricultural intelligence</span></section><section class="login-form"><div class="login-locale">${languageSwitcher()}</div><div class="eyebrow">Espacio del técnico</div><h2>Bienvenido a asase.</h2><p>Accede a tus parcelas y al análisis de cultivos.</p><form id="login-form"><label class="field">Correo electrónico<input name="email" type="email" autocomplete="username" required placeholder="tecnico@cooperativa.org"></label><label class="field">Contraseña<input name="password" type="password" autocomplete="current-password" required minlength="6" placeholder="Mínimo 6 caracteres"></label><button class="primary-button" type="submit">Iniciar sesión ${I('arrow')}</button></form><button class="muted-button" data-demo>Explorar como técnico de demostración</button><p style="font-size:11px">Acceso de demostración: no verifica credenciales. Utiliza datos ficticios. La contraseña no se guarda ni se envía.</p></section></div></main>`}
+function registerDialog(){return `<dialog class="dialog" id="register-dialog" aria-labelledby="register-title"><form id="register-form"><div class="header-action"><h2 id="register-title">Registrar un cultivo</h2><button class="icon-btn" type="button" data-cancel aria-label="Cerrar registro">${I('close')}</button></div><p>Asocia un cultivo a tu parcela. Para cambiarlo, utiliza el mismo nombre de parcela y región.</p><label class="field">Nombre o código de parcela<input name="parcel" required maxlength="60" placeholder="Ej. Parcela Tamale 01"></label><label class="field">Región<select name="region" required>${options([['','Selecciona una región'],...data.map(p=>[p.id,p.name])],state.selected||'')}</select></label><label class="field">Cultivo<select name="crop" required>${options([['','Selecciona un cultivo'],...cropNames.map(c=>[c,c])],state.crop==='registered'?'':state.crop)}</select></label><label class="field">Fecha de siembra o cambio<input name="date" type="date" required max="${endDate}" value="${state.date}"></label><p class="form-error" id="register-error" role="alert"></p><div class="dialog-actions"><button type="button" class="muted-button" data-cancel>Cancelar</button><button class="primary-button" type="submit">Guardar cultivo</button></div></form></dialog>`}
+function layout(){const title=navItems.find(x=>x[0]===state.view)[2];return `<div class="app"><div class="sidebar-overlay ${state.menu?'visible':''}" data-menuclose></div><aside class="sidebar ${state.menu?'open':''}"><div class="brand"><div class="brand-symbol">${I('fields')}</div><div><div class="brand-name">asase.</div><div class="brand-sub">Agricultural intelligence</div></div></div><div class="sidebar-label">PLATAFORMA</div><nav class="nav" aria-label="Principal">${navItems.map(([id,ic,n])=>`<button class="nav-btn ${state.view===id?'active':''}" data-view="${id}" ${state.view===id?'aria-current="page"':''}>${I(ic)}<span>${n}</span></button>`).join('')}</nav><div class="nav-separator"></div><div style="padding:12px;color:#7a9081;font-size:12px;line-height:1.8">Norte de Ghana<br>Espacio del técnico</div><div class="sidebar-spacer"></div><div class="sidebar-foot"><div class="sidebar-foot-top"><span class="status-dot"></span> Prototipo frontend</div><p>IAC de demostración.<br>Registros guardados en este navegador.</p></div></aside><main class="page"><header class="topbar"><div class="crumbs"><button class="icon-btn mobile-menu" data-menutoggle aria-label="Abrir menú">${I('menu')}</button><span>asase.</span><span>/</span><b>${title}</b></div><div class="top-actions">${languageSwitcher()}<span class="demo">● Demostración</span><span class="profile">Técnico</span><button class="icon-btn" data-logout aria-label="Cerrar sesión" title="Cerrar sesión">${I('user')}</button></div></header><div class="main"><div class="eyebrow">Inteligencia agrícola · Norte de Ghana</div><div class="heading"><div><h1>${state.view==='overview'?'Anticipar. Priorizar. Proteger.':title+'.'}</h1><p>${state.view==='overview'?'Cada parcela, su cultivo. Cada decisión, un motivo.':'Una lectura del suelo orientada a tus cultivos.'}</p></div></div>${state.view==='sources'?'':filters()}${state.view==='overview'?dashboard():state.view==='regions'?regionView():state.view==='crops'?cropView():sources()}${storageWarning?'<p class="form-error" role="alert">El navegador no permite guardar datos. Los registros se conservarán solo durante esta sesión.</p>':''}<footer class="foot"><span>${I('info')} IAC simulado · No representa rendimiento real ni predicción futura.</span><button class="muted-button" data-view="sources">Fuentes y metodología</button></footer></div></main></div>${registerDialog()}`}
+function render(){const root=document.querySelector('#app');root.innerHTML=state.user?layout():login();translateUI(root);attach()}
+function toast(message){const el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=translateString(message);document.body.append(el);setTimeout(()=>el.remove(),3500)}
+function openRegion(id,record){const wasOpen=!!state.selected,wasOverview=state.view==='overview';state.selected=id;state.parcel=record||null;state.view='overview';state.menu=false;if(wasOverview&&!wasOpen){document.querySelector('#detail-shell').innerHTML=detail();translateUI(document.querySelector('#detail-shell'));document.querySelector('#detail-shell').removeAttribute('inert');document.querySelector('#map-layout').classList.add('open');document.querySelectorAll('.geo-region').forEach(el=>el.classList.toggle('selected',+el.parentElement.dataset.parcel===id));bindDetail();}else render();if(window.innerWidth<=800)document.querySelector('#detail-shell').scrollIntoView({behavior:'smooth',block:'start'})}
+function bindDetail(){document.querySelector('[data-close-detail]')?.addEventListener('click',()=>{state.selected=null;state.parcel=null;document.querySelector('#map-layout').classList.remove('open');document.querySelector('#detail-shell').setAttribute('inert','');document.querySelectorAll('.geo-region').forEach(el=>el.classList.remove('selected'));document.querySelector('.geo-region-item')?.focus()});document.querySelector('#detail-parcel')?.addEventListener('change',e=>{state.parcel=e.target.value;render()});document.querySelectorAll('#detail-shell [data-register]').forEach(el=>el.onclick=openRegister);document.querySelectorAll('#detail-shell [data-view]').forEach(el=>el.onclick=()=>{state.view=el.dataset.view;render()})}
+function openRegister(){const dialog=document.querySelector('#register-dialog');dialog.querySelector('[name=region]').value=state.selected||'';dialog.showModal()}
+function attach(){document.querySelectorAll('[data-language]').forEach(el=>el.addEventListener('click',()=>{const next=el.dataset.language;if(next===language)return;language=next;try{localStorage.setItem('asase.language',language)}catch{storageWarning=true}render()}));document.querySelector('#login-form')?.addEventListener('submit',e=>{e.preventDefault();state.user='tech';e.target.reset();render()});document.querySelector('[data-demo]')?.addEventListener('click',()=>{state.user='demo';render()});document.querySelector('[data-logout]')?.addEventListener('click',()=>{state.user=null;state.selected=null;state.view='overview';render()});document.querySelectorAll('[data-view]').forEach(el=>el.onclick=()=>{state.view=el.dataset.view;state.menu=false;render()});document.querySelectorAll('[data-parcel]').forEach(el=>{el.addEventListener('click',()=>openRegion(+el.dataset.parcel,el.dataset.record));if(el.tagName.toLowerCase()==='g')el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openRegion(+el.dataset.parcel)}}});document.querySelector('#crop')?.addEventListener('change',e=>{state.crop=e.target.value;state.parcel=null;render()});document.querySelector('#date')?.addEventListener('change',e=>{if(!e.target.value||e.target.value<today||e.target.value>endDate){e.target.value=state.date;toast('Selecciona una fecha dentro de los próximos 90 días.');return}state.date=e.target.value;render()});document.querySelector('#compare-region')?.addEventListener('change',e=>{state.selected=+e.target.value||null;render()});document.querySelectorAll('[data-register]').forEach(el=>el.onclick=openRegister);document.querySelectorAll('[data-cancel]').forEach(el=>el.onclick=()=>document.querySelector('#register-dialog').close());document.querySelector('[data-menutoggle]')?.addEventListener('click',()=>{state.menu=!state.menu;render()});document.querySelector('[data-menuclose]')?.addEventListener('click',()=>{state.menu=false;render()});document.querySelectorAll('[data-zoom]').forEach(el=>el.onclick=()=>{state.zoom=el.dataset.zoom==='reset'?1:Math.max(1,Math.min(2.4,state.zoom+(el.dataset.zoom==='in'?.2:-.2)));render()});bindDetail();document.querySelector('#register-form')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.target),parcel=f.get('parcel').trim(),region=+f.get('region'),crop=f.get('crop'),date=f.get('date');if(!parcel||!data.some(p=>p.id===region)||!cropNames.includes(crop)||!date||date>endDate){document.querySelector('#register-error').textContent=translateString('Revisa el nombre, la región, el cultivo y la fecha.');return}if(records.some(r=>r.parcel.toLocaleLowerCase()===parcel.toLocaleLowerCase()&&r.region===region&&r.date===date)){document.querySelector('#register-error').textContent=translateString('Ya existe un registro para esa parcela en esa fecha. Elige otra fecha para registrar un cambio.');return}const record={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),parcel,region,crop,date,at:new Date().toISOString()};records.push(record);try{localStorage.setItem('asase.records.v2',JSON.stringify(records))}catch{storageWarning=true}state.crop='registered';state.selected=region;state.parcel=record.id;state.view='overview';render();toast('Cultivo registrado. Historial y prioridades actualizados.')})}
+render();
+})();
+</script>
+</body>
+</html>
