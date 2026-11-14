@@ -10,19 +10,16 @@ class Cultivo:
     tipo_ciclo: str
     duracion_ciclo_dias: int
 
-    # 1. Temperatura media (°C)
+    # 1. Temperatura media (°C), la temp que sería ideal
     temp_media_C: tuple[float, float]
 
-    # 2. Temperatura mínima (°C)
-    temp_min_C: float
+    #2 temperaturas tope
+    temp_tope: tuple[float, float]
 
-    # 3. Temperatura máxima (°C)
-    temp_max_C: float
-
-    # 4. Precipitación (mm por período)
+    # 4. Precipitación, intervalo de precipitaciones ideal
     precipitacion_mm: tuple[float, float]
 
-    # 5. Radiación solar (MJ/m²/día)
+    # 5. Radiación solar (MJ/m²/día), intervalo quer sería ideal
     radiacion_solar_MJ_m2: tuple[float, float]
 
     # 6. Humedad superficial (m³/m³)
