@@ -429,6 +429,7 @@ def recomendar_rotacion(
     config: Configuracion | None = None,
     iac_minimo: float = 60.0, idoneidad_hidrica_minima: float = .25,
     dias_entre_cultivos: int = 7, ancho_busqueda: int = 64,
+    fecha_fin: str | None = None,
     historial_ids: list[int] | tuple[int, ...] = (),
 ) -> dict:
     """Plan anual mediante búsqueda en haz (aproximada, no óptimo garantizado).
@@ -448,7 +449,9 @@ def recomendar_rotacion(
         raise ValueError("Las claves del catálogo deben coincidir con sus IDs")
     config = config or Configuracion()
     inicio = fecha_iso(territorio.fecha)
-    fin = aniversario(inicio)
+    fin = fecha_iso(fecha_fin) if fecha_fin is not None else aniversario(inicio)
+    if fin <= inicio:
+        raise ValueError("fecha_fin exclusiva debe ser posterior al inicio")
     horizonte = (fin - inicio).days
     historial = validar_historial(historial or [], territorio.id, inicio, catalogo)
     ids = validar_historial_ids(historial_ids, catalogo)
@@ -511,12 +514,15 @@ def recomendar_rotacion(
                 justificacion="Completa el margen de preparación tras el último cultivo registrado."))
     estados = [(disponible_inicial, tuple(historial), tramos_iniciales, 0.0)]
     mejor = (inicio, tuple(historial), [], -1.0)
+    def ocupados(tramos):
+        return sum(t["dias"] for t in tramos if t["tipo"] == "cultivo")
+
     while estados:
         siguientes = []
         for cursor, hist, tramos, utilidad in estados:
             finalizado = (fin, hist, tramos + ([tramo("barbecho", cursor, fin,
                 justificacion="Días sin cultivo en esta propuesta; no se atribuye una mejora automática del suelo.")] if cursor < fin else []), utilidad)
-            if utilidad > mejor[3]:
+            if (ocupados(tramos), utilidad) > (ocupados(mejor[2]), mejor[3]):
                 mejor = finalizado
             if cursor >= fin:
                 continue
@@ -548,7 +554,7 @@ def recomendar_rotacion(
                         justificacion="Margen configurable entre ciclos; no modifica el suelo simulado.")]
                 siguientes.append((disponible, hist + (registro,), nuevos, utilidad + iac * c.duracion_ciclo_dias))
         # Cota optimista: cada día restante podría alcanzar 100 puntos.
-        siguientes.sort(key=lambda s: (s[3] + 100 * (fin - s[0]).days, s[3]), reverse=True)
+        siguientes.sort(key=lambda s: (ocupados(s[2]) + (fin - s[0]).days, s[3] + 100 * (fin-s[0]).days), reverse=True)
         estados = siguientes[:ancho_busqueda]
 
     tramos = mejor[2]
@@ -579,7 +585,7 @@ def recomendar_rotacion(
     return {"fecha_inicio": inicio.isoformat(), "fecha_fin": fin.isoformat(), "dias": horizonte,
             "modo": "escenario_constante" if escenarios is None else "escenarios_mensuales",
             "rotacion": unidos, "dias_cultivados": cultivados,
-            "justificacion": ("Propuesta que favorece IAC alto y días cultivados, alternando familias, sin recortar ciclos. "
+            "justificacion": ("Propuesta que prioriza días cultivados y desempata por IAC, alternando familias, sin recortar ciclos. "
                               "Búsqueda aproximada; los huecos se cubren con preparación o barbecho."
                               if cultivados else "No se encontró ningún ciclo admisible con los datos, filtros y búsqueda utilizados; se devuelve el año en barbecho."),
             "supuestos": supuestos}

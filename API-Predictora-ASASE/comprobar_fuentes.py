@@ -23,7 +23,7 @@ def main():
         opciones=dict(start_date=args.start,end_date=args.end,point=point,bbox=None,
                       historial=[],getter=lambda *a:tabla)
         iac=predecir(**opciones,accion='iac',cultivo_id=1)
-        rotacion=predecir(**opciones,accion='rotaciones')
+        rotacion=predecir(start_date=args.start,point=point,accion='rotaciones')
         print(json.dumps({'estado':'OK','dias':n,'iac_maiz':iac,
                           'rotacion_dias':rotacion['dias'],
                           'agregado':{'temp_min_C':t.temp_min_C,'temp_max_C':t.temp_max_C,

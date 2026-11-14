@@ -1,7 +1,7 @@
 """Puente getter -> agregación diaria -> motor IAC/rotación."""
 import hashlib
 import json
-from dataclasses import replace
+from dataclasses import replace, asdict
 from datetime import timedelta
 from pathlib import Path
 
@@ -12,7 +12,7 @@ from errores import DatosInsuficientes
 from getter import get_tabla
 from iac import (PARAMETROS, Territorio, cargar_cultivos, calcular_iac,
                  recomendar_rotacion, validar_historial_ids, entero)
-from validacion import validar_consulta
+from validacion import validar_consulta, resolver_periodo
 
 CATALOGO = cargar_cultivos(Path(__file__).with_name("cultivos.json"))
 
@@ -89,7 +89,7 @@ def agregar_tabla(tabla, start_date, end_date, point=None, bbox=None):
     return Territorio(**metadata, **valores), dias
 
 
-def predecir(start_date, end_date, point=None, bbox=None, historial=None,
+def predecir(start_date, end_date=None, point=None, bbox=None, historial=None,
              accion="iac", cultivo_id=None, *, getter=None, catalogo=None):
     """Mismos argumentos del getter + IDs históricos + acción.
 
@@ -97,7 +97,8 @@ def predecir(start_date, end_date, point=None, bbox=None, historial=None,
     devuelve únicamente iac y razon. El historial no incluye el cultivo objetivo.
     getter puede inyectarse para integrar otra implementación o probar sin red.
     """
-    validar_consulta(start_date, end_date, point, bbox)
+    end_date = resolver_periodo(start_date, end_date, accion)
+    validar_consulta(start_date, end_date, point, bbox, permitir_largo=accion == "rotaciones")
     cat = CATALOGO if catalogo is None else catalogo
     if not cat:
         raise ValueError("Catálogo vacío")
@@ -112,18 +113,47 @@ def predecir(start_date, end_date, point=None, bbox=None, historial=None,
             raise ValueError(f"Cultivo desconocido: {cultivo_id}")
         if accion != "iac":
             raise ValueError("cultivo_id solo se admite para la acción iac")
-    tabla = (getter or get_tabla)(start_date, end_date, point, bbox)
-    territorio, dias = agregar_tabla(tabla, start_date, end_date, point, bbox)
+    referencia_inicio, referencia_fin = ("2025-01-01", "2025-12-31") if accion == "rotaciones" else (start_date, end_date)
+    tabla = (getter or get_tabla)(referencia_inicio, referencia_fin, point, bbox)
+    territorio, dias = agregar_tabla(tabla, referencia_inicio, referencia_fin, point, bbox)
     if accion == "iac":
         def evaluar(c):
             return calcular_iac(territorio, c, dias_precipitacion=dias, catalogo=cat, historial_ids=ids)
         if cultivo_id is not None:
             return evaluar(cat[cultivo_id])
         return {str(cid): evaluar(cat[cid]) for cid in sorted(cat)}
-    # La rotación empieza DESPUÉS del período observado; no se inventa un
-    # pronóstico mensual a partir de los promedios de ese período.
-    comienzo = (pd.Timestamp(end_date).date() + timedelta(days=1)).isoformat()
-    plan = recomendar_rotacion(replace(territorio, fecha=comienzo), cat,
-                              dias_precipitacion=dias, historial_ids=ids)
-    plan["periodo_observado"] = {"start_date": start_date, "end_date": end_date, "dias": dias}
+    # Repite el patrón mensual observado en 2025 para cada año de plantación.
+    df = tabla.copy()
+    if "fecha" in df.columns:
+        df = df.set_index("fecha")
+    df.index = pd.to_datetime(df.index, utc=True).tz_localize(None)
+    plantacion_inicio = pd.Timestamp(start_date)
+    fin_exclusivo = pd.Timestamp(end_date) + pd.Timedelta(days=1)
+    escenarios = {}
+    mensuales = {}
+    cursor = plantacion_inicio.replace(day=1)
+    while cursor < fin_exclusivo:
+        mes = cursor.month
+        if mes not in mensuales:
+            desde = pd.Timestamp(year=2025, month=mes, day=1)
+            hasta = desde + pd.offsets.MonthEnd(0)
+            mensuales[mes] = agregar_tabla(df.loc[desde:hasta], desde.date().isoformat(),
+                                         hasta.date().isoformat(), point, bbox)
+        t, n = mensuales[mes]
+        escenarios[cursor.strftime("%Y-%m")] = {
+            "territorio": asdict(replace(t, fecha=cursor.date().isoformat())),
+            "dias_precipitacion": n,
+        }
+        cursor += pd.offsets.MonthBegin(1)
+    plan = recomendar_rotacion(replace(territorio, fecha=start_date), cat,
+                              dias_precipitacion=dias, historial_ids=ids,
+                              escenarios=escenarios, fecha_fin=fin_exclusivo.date().isoformat(),
+                              dias_entre_cultivos=0)
+    plan["periodo_plantacion"] = {"start_date": start_date, "end_date": end_date}
+    plan["referencia"] = {"anio": 2025, "metodo": "Patrón mensual de 2025 repetido; no es un pronóstico."}
+    plan["objetivo"] = "Maximizar días cultivados; desempatar por IAC. Búsqueda aproximada."
+    plan["porcentaje_ocupacion"] = round(100 * plan["dias_cultivados"] / plan["dias"], 2)
+    plan["supuestos"].append("Se permite cosechar y comenzar otro ciclo en la misma fecha (sin margen de preparación). Los ciclos deben caber completos y superar los filtros de aptitud.")
+    for t, _ in mensuales.values():
+        plan["supuestos"].extend(a for a in t.avisos_datos if a not in plan["supuestos"])
     return plan

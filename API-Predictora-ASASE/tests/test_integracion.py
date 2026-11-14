@@ -28,6 +28,14 @@ def tabla_ejemplo():
     },index=pd.date_range('2025-04-01','2025-04-03',name='fecha'))
 
 
+def tabla_2025():
+    df=tabla_ejemplo().iloc[[1]].copy()
+    df=pd.concat([df]*365,ignore_index=True)
+    df.index=pd.date_range('2025-01-01','2025-12-31',name='fecha')
+    df['temp_min_C']=24.;df['temp_max_C']=30.
+    return df
+
+
 def peticion(**cambios):
     return dict(start_date='2025-04-01',end_date='2025-04-03',point=[9.4,-.84],bbox=None,
                 historial=[],accion='iac',**cambios)
@@ -140,15 +148,15 @@ class ServicioTests(unittest.TestCase):
         df=tabla_ejemplo()
         # Escenario apto para varios cultivos.
         df['temp_min_C']=24;df['temp_max_C']=30
-        p=peticion();p.update(accion='rotaciones',historial=[1])
-        r=predecir(**p,getter=lambda *a:df)
-        self.assertEqual(r['fecha_inicio'],'2025-04-04')
-        self.assertEqual(r['fecha_fin'],'2026-04-04')
+        p=peticion();p.update(accion='rotaciones',historial=[1],start_date='2026-04-04',end_date=None)
+        r=predecir(**p,getter=lambda *a:tabla_2025())
+        self.assertEqual(r['fecha_inicio'],'2026-04-04')
+        self.assertEqual(r['fecha_fin'],'2027-04-04')
         self.assertEqual(sum(t['dias'] for t in r['rotacion']),365)
         cultivos=[t for t in r['rotacion'] if t['tipo']=='cultivo']
         self.assertGreater(len(cultivos),0)
         self.assertNotEqual(cultivos[0]['familia'],'Poaceae')
-        self.assertEqual(r['modo'],'escenario_constante')
+        self.assertEqual(r['modo'],'escenarios_mensuales')
 
 
 class HTTPTests(unittest.TestCase):
@@ -168,6 +176,8 @@ class HTTPTests(unittest.TestCase):
 
     def test_post_rotaciones_bbox(self):
         p=peticion();p.update(point=None,bbox=[9,-1,10,0],accion='rotaciones')
+        p['end_date']=None
+        self.getter.return_value=tabla_2025()
         r=self.client.post('/predecir',json=p)
         self.assertEqual(r.status_code,200,r.text)
         self.assertEqual(r.json()['dias'],365)
@@ -276,10 +286,10 @@ class NulosTests(unittest.TestCase):
         df['suelo_ph_0_30cm']=np.nan
         t,_=agregar_tabla(df,'2025-04-01','2025-04-03',point=[9,-1])
         self.assertEqual(t.temp_media_C,28.5)
-        p=peticion();p['accion']='rotaciones'
-        r=predecir(**p,getter=lambda *a:df)
+        p=peticion();p['accion']='rotaciones';p['end_date']=None
+        r=predecir(**p,getter=lambda *a:tabla_2025())
         self.assertEqual(r['dias'],365)
-        self.assertTrue(any('ausentes' in a for a in r['supuestos']))
+        self.assertEqual(r['referencia']['anio'],2025)
 
     def test_todo_ausente_no_inventa(self):
         df=tabla_ejemplo()
@@ -287,3 +297,29 @@ class NulosTests(unittest.TestCase):
             if k!='suelo_textura_clase': df[k]=np.nan
         with self.assertRaises(DatosInsuficientes):
             agregar_tabla(df,'2025-04-01','2025-04-03',point=[9,-1])
+
+class PeriodoRotacionesTests(unittest.TestCase):
+    def test_multianual_referencia_2025(self):
+        f=Mock(return_value=tabla_2025())
+        r=predecir('2026-01-01','2027-12-31',point=[9,-1],accion='rotaciones',getter=f)
+        f.assert_called_once_with('2025-01-01','2025-12-31',[9,-1],None)
+        self.assertEqual(r['dias'],730)
+        self.assertEqual(r['fecha_fin'],'2028-01-01')
+        self.assertEqual(sum(t['dias'] for t in r['rotacion']),730)
+        self.assertGreater(r['dias_cultivados'],500)
+        self.assertFalse(any(t['tipo']=='preparacion' for t in r['rotacion']))
+
+    def test_default_y_bisiesto(self):
+        r=predecir('2027-04-01',point=[9,-1],accion='rotaciones',getter=lambda *a:tabla_2025())
+        self.assertEqual(r['dias'],366)
+        self.assertEqual(r['fecha_inicio'],'2027-04-01')
+        self.assertEqual(r['periodo_plantacion']['end_date'],'2028-03-31')
+
+    def test_iac_366_dias_rechazado(self):
+        with self.assertRaises(ValueError):
+            predecir('2024-01-01','2024-12-31',point=[9,-1],accion='iac',getter=Mock())
+
+    def test_periodo_corto_no_recorta_ciclo(self):
+        r=predecir('2026-04-01','2026-04-10',point=[9,-1],accion='rotaciones',getter=lambda *a:tabla_2025())
+        self.assertEqual(r['dias'],10)
+        self.assertEqual(r['dias_cultivados'],0)

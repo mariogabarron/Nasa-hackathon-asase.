@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictFloat, Stric
 from errores import DatosInsuficientes, ErrorConfiguracion, ErrorFuente
 from getter import get_tabla
 from servicio import predecir, CATALOGO
-from validacion import validar_consulta
+from validacion import validar_consulta, resolver_periodo
 
 LOG = logging.getLogger(__name__)
 Coordenada = StrictInt | StrictFloat
@@ -20,7 +20,7 @@ IdCultivo = Annotated[StrictInt, Field(ge=1)]
 class Peticion(BaseModel):
     model_config = ConfigDict(extra="forbid")
     start_date: StrictStr
-    end_date: StrictStr
+    end_date: StrictStr | None = None
     point: tuple[Coordenada, Coordenada] | None = None
     bbox: tuple[Coordenada, Coordenada, Coordenada, Coordenada] | None = None
     historial: list[IdCultivo] = Field(default_factory=list, max_length=100)
@@ -29,7 +29,8 @@ class Peticion(BaseModel):
 
     @model_validator(mode="after")
     def comprobar(self):
-        validar_consulta(self.start_date, self.end_date, self.point, self.bbox)
+        self.end_date = resolver_periodo(self.start_date, self.end_date, self.accion)
+        validar_consulta(self.start_date, self.end_date, self.point, self.bbox, permitir_largo=self.accion == "rotaciones")
         if self.accion == "rotaciones" and self.cultivo_id is not None:
             raise ValueError("cultivo_id solo se utiliza con iac")
         return self
