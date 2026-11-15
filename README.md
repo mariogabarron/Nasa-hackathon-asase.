@@ -279,8 +279,8 @@ asase. was developed by a multidisciplinary team combining software development,
 | Area | Team Members |
 |------|--------------|
 | User Interface & Experience | Clara & Mario |
-| Data Sources & Processing | Albero & Edu |
-| Mathematical Model & Python Algorithms | Navarro & David |
+| Data Sources & Processing | Javier Albero & Eduardo |
+| Mathematical Model & Python Algorithms | Javier Navarro & David |
 
 Developed in the context of the **NASA Space Apps Challenge 2026**.
 
