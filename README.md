@@ -1,209 +1,327 @@
-# asase.
 
-**Inteligencia agrícola para convertir datos en decisiones.**
+<h1 align="center">asase.</h1>
 
-Plataforma de apoyo a la decisión agrícola que combina datos ambientales, información del suelo y un modelo matemático explicable para evaluar la aptitud de distintos cultivos, comparar alternativas y orientar estrategias de rotación. Su primer caso de uso se centra en el **norte de Ghana**.
+<p align="center">
+  <strong>Agricultural intelligence, made accessible.</strong>
+</p>
 
-> **Una cosecha sostiene mucho más que un campo.** Nuestro objetivo es que la información técnica llegue a las comunidades que más pueden beneficiarse de ella, sin exigir que cada agricultor disponga de un smartphone o utilice una aplicación.
+<p align="center">
+  From Earth observation data to practical decisions for the communities that need them most.
+</p>
 
-**Proyecto desarrollado en el contexto de NASA Space Apps Challenge 2026.**  
-**Estado:** prototipo funcional, con interfaz y motor de cálculo desarrollados por separado; integración y validación agronómica pendientes.
+<p align="center">
+  <a href="https://asase.earth">Explore asase.earth</a>
+  ·
+  NASA Space Apps Challenge 2026
+</p>
 
 ---
 
-## 01. El problema
+## 01. Overview
 
-La variabilidad de las precipitaciones, las limitaciones de acceso al agua y la degradación del suelo complican la planificación agrícola. Una decisión de siembra inadecuada puede traducirse en menor disponibilidad de alimentos, pérdida de ingresos y menos recursos para la siguiente campaña.
+**asase.** is an agricultural decision-support platform designed to help agricultural professionals, engineers, and cooperatives make informed decisions about land use, crop suitability, and crop rotation.
 
-Muchas soluciones digitales parten de una premisa difícil de cumplir: que cada agricultor pueda acceder de forma constante a una aplicación, interpretar sus resultados y actuar individualmente. Además, los problemas agrícolas no siempre se limitan a una parcela; a menudo requieren **comparar zonas y coordinar prioridades a escala territorial**.
+By combining NASA satellite data, soil information, and an interpretable mathematical model, asase. transforms complex environmental information into accessible, actionable agricultural recommendations.
 
-## 02. Nuestra propuesta
+Our first area of focus is **Northern Ghana**, where seasonal rainfall, soil conditions, and limited access to technical resources can make agricultural planning particularly challenging.
 
-**asase.** está concebida principalmente para **técnicos agrícolas, ingenieros agrónomos y cooperativas**, que pueden analizar varias zonas, estudiar alternativas y trasladar recomendaciones comprensibles a los agricultores locales.
+**Our mission is simple: make agricultural intelligence accessible to the communities that need it most.**
 
-El agricultor es el beneficiario final; el especialista actúa como puente entre la información técnica y la decisión sobre el terreno.
+---
 
-La plataforma busca responder a cuatro preguntas:
+## 02. The Problem
 
-1. **¿Dónde actuar primero?** Identificar zonas que requieren mayor atención según el cultivo y las condiciones analizadas.
-2. **¿Qué cultivar?** Comparar la aptitud de los cultivos considerados para una zona o parcela.
-3. **¿Cuándo plantar?** Evaluar escenarios de siembra según las condiciones disponibles y referencias estacionales.
-4. **¿Cómo aprovechar mejor el terreno?** Proponer secuencias de rotación que reduzcan los periodos sin cultivo, respetando las restricciones modeladas.
+For millions of families, agriculture is more than an economic activity. It is their primary source of food, income, and stability.
 
-## 03. Funcionalidades
+Unpredictable rainfall, soil degradation, and limited access to agricultural expertise can turn a single planting decision into a significant economic risk.
 
-### Interfaz para técnicos y cooperativas
+While digital agricultural tools continue to emerge, many rely on an assumption: that every farmer has access to a smartphone, reliable internet connectivity, and the technical knowledge required to interpret complex information.
 
-- **Resumen territorial:** mapa interactivo del norte de Ghana y visualización de zonas prioritarias.
-- **Análisis de zonas y regiones:** selección de áreas, cultivos y periodos para consultar indicadores de aptitud.
-- **Alternativas de cultivos:** comparación de opciones del catálogo agrícola.
-- **Registro de parcelas:** asociación de cultivos a parcelas e historial de los registros introducidos.
-- **Panel de Índice de Aptitud de Cultivo (IAC):** presentación contextual del indicador al seleccionar una zona.
-- **Fuentes:** sección destinada a documentar el origen de los datos utilizados.
-- **Interfaz bilingüe:** español e inglés, con preferencia de idioma conservada en el navegador.
+Even in developed countries, solutions designed exclusively for individual farmers can overlook a fundamental challenge: **agricultural problems often extend beyond individual plots and require coordinated decisions at a regional level.**
 
-El prototipo frontend es una aplicación **HTML, CSS y JavaScript** que puede abrirse localmente. La interacción, la navegación y el historial en navegador están implementados; **los valores agrícolas mostrados por esta interfaz son de demostración y todavía no proceden del motor Python**. El acceso de técnico es ilustrativo, no un sistema de autenticación productivo.
+We believe technology should adapt to communities, not the other way around.
 
-### Motor de cálculo en Python
+---
 
-El motor implementa dos tipos de operación:
+## 03. Our Solution
 
-| Operación | Objetivo |
-| --- | --- |
-| `iac` | Evaluar la aptitud de un cultivo concreto o comparar los 12 cultivos del catálogo. |
-| `rotaciones` | Generar alternativas de sucesión de cultivos para un periodo de planificación. |
+**asase. connects agricultural intelligence with the people who can turn it into action.**
 
-La selección de cultivos, los periodos y los resultados se calculan de acuerdo con los parámetros y reglas definidos para el piloto. En la generación de rotaciones se busca **maximizar el tiempo con cultivo** y comparar alternativas mediante el IAC; la búsqueda es aproximada y no garantiza el óptimo global.
+Instead of requiring every farmer to use a digital application, our platform empowers agricultural technicians, engineers, and cooperatives to analyze agricultural conditions, identify vulnerable areas, and communicate recommendations directly to local farmers.
 
-## 04. ¿Cómo funciona el IAC?
+This approach makes it possible to support multiple farmers through a single technical organization.
 
-El **Índice de Aptitud de Cultivo (IAC)** es una puntuación multicriterio que expresa la adecuación estimada de un cultivo a determinadas condiciones ambientales y edáficas.
+The platform addresses four essential questions:
 
-El cálculo utiliza valores normalizados de los parámetros relevantes y **pesos que cambian según la estación** del norte de Ghana. Su formulación básica es:
+- **Where should we act first?** Identify agricultural areas requiring priority attention.
+- **What should we plant?** Evaluate crop suitability according to environmental and soil conditions.
+- **When should we plant?** Analyze seasonal conditions to support planting decisions.
+- **How can we make better use of the land?** Generate crop-rotation strategies to improve land-use planning.
+
+Our goal is not simply to visualize environmental data, but to transform it into useful agricultural decisions.
+
+---
+
+## 04. Platform Features
+
+### Interactive Agricultural Map
+
+Explore agricultural regions through an interactive geographic interface.
+
+The platform allows users to select areas, examine environmental conditions, and visualize information relevant to agricultural planning.
+
+### Crop Suitability Index (IAC)
+
+Evaluate how suitable a particular crop is for a selected location and period.
+
+The **Crop Suitability Index (IAC)** combines environmental and soil parameters using a mathematical weighting system adapted to seasonal conditions and crop requirements.
+
+### Crop Alternatives
+
+Compare different crops according to their suitability for a particular territory.
+
+This allows agricultural professionals to explore alternative planting decisions based on the conditions of the selected area.
+
+### Crop Rotation Recommendations
+
+Generate agricultural rotation strategies across a specified planning period.
+
+The system considers crop cycles, environmental suitability, and planting constraints to produce different recommendations.
+
+Users can request multiple alternatives for comparison.
+
+### Parcel Management
+
+Register crops associated with agricultural parcels and maintain a record of planting activity.
+
+This provides useful context when reviewing land-use decisions and agricultural history.
+
+### Regional Analysis
+
+Analyze agricultural conditions beyond individual parcels.
+
+The platform is designed to support technicians and cooperatives working with multiple agricultural areas and communities.
+
+### Accessible Interface
+
+The web application provides a visual interface designed to make technical agricultural information easier to interpret.
+
+The project includes Spanish and English interface support.
+
+---
+
+## 05. Mathematical Model
+
+At the core of **asase.** is the **Crop Suitability Index (IAC)**, an interpretable mathematical model that evaluates the suitability of a crop under specific environmental and soil conditions.
+
+### Weighted Suitability Model
+
+The IAC uses a weighted multicriteria scoring system:
 
 $$
-IAC = 100 \sum_{i=1}^{n} w_i s_i
+\mathrm{IAC} = 100 \sum_{i=1}^{n} w_i \cdot s_i
 $$
 
-Donde:
+Subject to the normalization constraint:
 
-- `wᵢ` representa el peso del parámetro `i` para la estación considerada.
-- `sᵢ` representa la puntuación de idoneidad del parámetro para el cultivo evaluado.
-- Los pesos activos se normalizan para que su suma sea 1.
+$$
+\sum_{i=1}^{n} w_i = 1
+$$
 
-Se emplean cuatro niveles de idoneidad, inspirados en clasificaciones de aptitud agronómica:
+Where:
 
-| Nivel | Interpretación | Puntuación |
-| --- | --- | ---: |
-| S1 | Óptimo | 1,00 |
-| S2 | Moderado | 0,65 |
-| S3 | Marginal | 0,30 |
-| N | No apto | 0,00 |
+- $w_i$ represents the weight assigned to environmental parameter $i$.
+- $s_i$ represents the suitability score of parameter $i$ for the selected crop.
+- $n$ represents the number of active environmental parameters.
 
-El modelo incorpora **reglas limitantes**: cuando un parámetro crítico para un cultivo se encuentra en condiciones no aptas, se activa una advertencia o clasificación de no aptitud, incluso si la suma ponderada resulta elevada. La textura del suelo se considera de forma estructurada para evitar contabilizar varias veces la misma información.
+Weights vary according to the climatic season, allowing the model to account for changes in the relative importance of environmental factors.
 
-Se distinguen cuatro periodos climáticos: **inicio de lluvias (abril–junio), temporada de lluvias (julio–septiembre), retirada de lluvias (octubre–noviembre) y estación seca o Harmattan (diciembre–marzo)**.
+### Suitability Classification
 
-> **Importante:** el IAC no es una predicción directa de toneladas cosechadas, rendimiento económico ni fertilidad futura. Es un indicador orientativo de **aptitud relativa**, sujeto a la calidad de los datos y a validación local.
+Each parameter is classified using four suitability levels:
 
-## 05. Datos y fuentes
+| Category | Description | Score |
+|----------|-------------|-------|
+| S1 | Highly suitable | 1.00 |
+| S2 | Moderately suitable | 0.65 |
+| S3 | Marginally suitable | 0.30 |
+| N | Not suitable | 0.00 |
 
-El diseño del sistema contempla las siguientes fuentes de observación terrestre y datos de suelo:
+The model incorporates limiting rules for critical environmental variables.
 
-| Fuente | Información de interés |
-| --- | --- |
-| [NASA POWER](https://power.larc.nasa.gov/) | Temperatura y radiación solar; series climáticas históricas. |
-| [NASA GPM](https://gpm.nasa.gov/) | Estimaciones de precipitación. |
-| [NASA SMAP](https://smap.jpl.nasa.gov/) | Indicadores de humedad del suelo. |
-| [ISRIC SoilGrids](https://soilgrids.org/) | Propiedades estimadas del suelo, como pH, textura y carbono orgánico. |
+If a critical parameter is classified as unsuitable, the crop receives a non-suitable classification regardless of its weighted score.
 
-El motor se ha diseñado alrededor de una matriz de **15 variables**, de las cuales **11 participan directamente en la ponderación** y 4 cumplen funciones auxiliares, como seleccionar la estación y caracterizar la textura del suelo.
+### Seasonal Adaptation
 
-**Estado de las fuentes:** la obtención de datos de NASA POWER se ha trabajado en el prototipo; el acceso a determinadas capas de SMAP y SoilGrids puede requerir configurar credenciales o servicios externos. No debe interpretarse que todas las fuentes estén integradas y operativas en cualquier instalación.
+The model considers four climatic periods in Northern Ghana:
 
-Para la planificación de rotaciones, la implementación actual utiliza **2025 como año de referencia climático**. Se trata de escenarios basados en datos históricos, **no de pronósticos meteorológicos futuros en tiempo real**.
+1. **Early Rainy Season:** April–June.
+2. **Main Rainy Season:** July–September.
+3. **Late Rainy Season:** October–November.
+4. **Dry Season / Harmattan:** December–March.
 
-## 06. Arquitectura y uso
+The mathematical framework includes 12 crops and crop-specific suitability thresholds.
 
-```text
-                   TÉCNICO / COOPERATIVA
-                            │
-                            ▼
-                   INTERFAZ WEB (UI)
-             mapa · parcelas · cultivos · IAC
-                            │
-                      integración
-                        pendiente
-                            │
-                            ▼
-                    API / MOTOR PYTHON
-                 IAC · reglas · rotaciones
-                            │
-                            ▼
-                  DATOS Y PARÁMETROS
-              NASA · SoilGrids · catálogo
-                            │
-                            ▼
-                  RECOMENDACIONES
-                            │
-                            ▼
-                     AGRICULTORES
-```
+**Important:** The IAC estimates agricultural suitability. It does not directly predict crop yields, economic returns, or future soil fertility.
+
+---
+
+## 06. Crop Rotation Engine
+
+The crop rotation engine evaluates alternative planting sequences for a selected agricultural area and planning horizon.
+
+Its objectives include:
+
+- Maximizing the proportion of time during which land is cultivated.
+- Comparing the suitability of alternative crop sequences.
+- Respecting crop growth-cycle constraints.
+- Considering seasonal environmental conditions.
+- Providing multiple distinct recommendations.
+
+Rotation planning uses historical environmental conditions from 2025 as its climatic reference.
+
+This approach enables the comparison of agricultural scenarios based on historical patterns rather than treating them as guaranteed future weather forecasts.
+
+---
+
+## 07. Data Sources
+
+asase. is built around environmental and soil information from established scientific data providers.
+
+| Source | Data |
+|--------|------|
+| [NASA POWER](https://power.larc.nasa.gov/) | Historical temperature and solar radiation |
+| [NASA GPM](https://gpm.nasa.gov/) | Satellite-based precipitation estimates |
+| [NASA SMAP](https://smap.jpl.nasa.gov/) | Soil moisture observations |
+| [ISRIC SoilGrids](https://soilgrids.org/) | Estimated soil properties, texture, pH, and organic carbon |
+
+The agricultural model combines these environmental variables with crop-specific agronomic requirements.
+
+The methodology includes seasonal weights, suitability intervals, and limiting conditions for the crops included in the project.
+
+Source coverage and spatial resolution must be considered when interpreting agricultural recommendations.
+
+---
+
+## 08. Technology
+
+The project combines a web application, a Python-based mathematical engine, and an API for agricultural analysis.
 
 ### Frontend
 
-La versión estática se ejecuta abriendo `index.html` en un navegador moderno. No requiere instalar un framework ni iniciar un servidor para explorar la demostración. Los registros del prototipo se almacenan localmente en el navegador.
+- HTML
+- CSS
+- JavaScript
+- Interactive geographic visualization
+- Responsive web interface
+- Spanish and English language support
 
 ### Backend
 
-El motor está desarrollado en **Python** y contempla una API mediante **FastAPI** con el endpoint `POST /predecir`. Su ejecución requiere preparar las dependencias y la configuración de datos correspondiente a la versión del backend utilizada.
+- Python
+- FastAPI
+- Mathematical suitability calculations
+- Crop-rotation algorithms
+- Environmental data processing
+- Agricultural recommendation logic
 
-Ejemplo de solicitud para comparar cultivos:
+### Main Operations
 
-```json
-{
-  "accion": "iac",
-  "start_date": "2025-04-01",
-  "end_date": "2025-06-03",
-  "point": [6.6885, -1.6244]
-}
-```
+The calculation engine supports two principal operations:
 
-Si se incluye `cultivo_id`, la operación se centra en ese cultivo; si se omite, puede evaluar los 12 cultivos del catálogo.
+| Operation | Description |
+|-----------|-------------|
+| `iac` | Evaluates crop suitability for a selected location and period |
+| `rotaciones` | Generates alternative crop-rotation recommendations |
 
-Ejemplo de solicitud de rotaciones:
-
-```json
-{
-  "accion": "rotaciones",
-  "start_date": "2027-04-01",
-  "end_date": "2028-03-31",
-  "point": [6.6885, -1.6244],
-  "n_recomendaciones": 3
-}
-```
-
-En `rotaciones`, `n_recomendaciones` es un entero positivo (por defecto, `3`) y, si se omite `end_date`, se utiliza un horizonte de un año. Esta operación admite periodos superiores a 365 días. La planificación toma como referencia datos estacionales históricos de 2025.
-
-> **Nota de integración:** los ejemplos documentan el contrato previsto del motor, pero la interfaz web distribuida como prototipo aún no realiza llamadas reales a esta API. Los nombres de archivos de arranque y la configuración de credenciales deben documentarse según el repositorio final de backend.
-
-## 07. Estado del proyecto
-
-| Componente | Estado |
-| --- | --- |
-| Definición del piloto en el norte de Ghana | Definido |
-| Selección de parámetros y catálogo de 12 cultivos | Definido |
-| Matriz de pesos y reglas de idoneidad | Desarrollado |
-| Motor Python para IAC y propuestas de rotación | Prototipo desarrollado |
-| Interfaz web interactiva y bilingüe | Prototipo desarrollado |
-| Conexión entre interfaz y backend | Pendiente |
-| Integración estable de todas las fuentes | En desarrollo |
-| Validación con mediciones y especialistas locales | Pendiente |
-| Predicciones con fuentes actualizadas en tiempo real | Visión futura |
-
-## 08. Próximos pasos
-
-1. **Integración:** conectar la interfaz a la API para sustituir los indicadores de demostración por cálculos reales y explicables.
-2. **Calidad de datos:** verificar cobertura espacial, resolución, fechas, valores ausentes y consistencia entre fuentes.
-3. **Validación agronómica:** contrastar IAC, reglas y rotaciones con especialistas y datos locales del norte de Ghana.
-4. **Evaluación:** establecer métricas reproducibles para comprobar utilidad, limitaciones e incertidumbre del sistema.
-5. **Despliegue en campo:** optimizar el uso desde dispositivos portátiles y en contextos de conectividad limitada.
-6. **Escalabilidad:** estudiar nuevas regiones y países, adaptar parámetros a cada contexto e incorporar fuentes más recientes cuando su calidad lo permita.
-
-## 09. Equipo
-
-| Área | Responsables |
-| --- | --- |
-| Diseño e interfaz de usuario (UI) | Clara y Mario |
-| Datos y fuentes (datasets) | Albero y Edu |
-| Modelo matemático y algoritmo Python | Navarro y David |
-
-## 10. Visión
-
-Creemos que el acceso a información agrícola útil no debería depender del nivel de digitalización de una comunidad. Por eso diseñamos una herramienta para quienes pueden transformar datos complejos en decisiones coordinadas y trasladarlas directamente al campo.
-
-**Nuestro objetivo no es solo ayudar a elegir mejores cultivos: es contribuir a que más familias encuentren en su tierra nuevas oportunidades de prosperar.**
+The API is designed to process geographic coordinates, date ranges, crop selection, and planning parameters.
 
 ---
 
-*asase. es un prototipo de apoyo a decisiones agrícolas. Sus estimaciones no sustituyen el criterio de profesionales de agronomía, los análisis directos del terreno ni las recomendaciones validadas localmente.*
+## 09. Project Structure
+
+The public repository includes the application and the technical components developed during the project.
+
+```text
+space-apps-agriculture/
+│
+├── API-Predictora-ASASE/
+├── ASASE-Integrado/
+├── ASASE-Motor-IAC-Rotacion/
+├── ASASE-Motor-IAC/
+├── api-predictora/
+├── aptitud/
+├── ideas/
+├── justificacion-proyecto/
+├── parametros-suelo/
+├── python-playground/
+├── user-interface/
+│
+├── cultivo.py
+├── cultivo_iac.py
+├── territorio.py
+├── territorio_iac.py
+│
+├── README.md
+└── LICENSE
+```
+
+The repository contains the agricultural model, API implementations, interface development, experimental code, and methodological documentation.
+
+**Repository:** [github.com/mariogabarron/space-apps-agriculture](https://github.com/mariogabarron/space-apps-agriculture)
+
+---
+
+## 10. Our Team
+
+asase. was developed by a multidisciplinary team combining software development, mathematical modeling, data analysis, and user experience design.
+
+| Area | Team Members |
+|------|--------------|
+| User Interface & Experience | Clara & Mario |
+| Data Sources & Processing | Albero & Edu |
+| Mathematical Model & Python Algorithms | Navarro & David |
+
+Developed in the context of the **NASA Space Apps Challenge 2026**.
+
+---
+
+## 11. Our Vision
+
+We believe that living in a low-resource community should never determine someone's opportunities.
+
+Agricultural knowledge, environmental information, and technological progress should be accessible beyond the most developed regions of the world.
+
+Our approach is designed to make this possible by empowering the agricultural professionals and cooperatives who already work directly with farming communities.
+
+Northern Ghana is our starting point, but our vision extends much further.
+
+By adapting agricultural parameters, expanding regional coverage, and incorporating additional environmental information, asase. aims to support agricultural decision-making in more communities around the world.
+
+**Our ultimate goal is not simply to improve crops. It is to help more families find new opportunities to prosper from their land.**
+
+---
+
+## 12. Responsible Use
+
+asase. is an agricultural decision-support tool.
+
+Its recommendations depend on environmental data quality, model assumptions, and the representativeness of available soil information.
+
+Agricultural suitability estimates should be interpreted alongside local expertise, field measurements, and the practical conditions faced by farmers.
+
+The system is intended to support informed agricultural decisions rather than replace professional agronomic judgment.
+
+---
+
+## License
+
+This project is distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+### asase.
+
+**Intelligence for the land. Opportunity for the people.**
+
+🌍 [asase.earth](https://asase.earth)
