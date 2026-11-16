@@ -1,9 +1,0 @@
-{
-  "start_date": "2025-04-01",
-  "end_date": "2025-04-03",
-  "point": [9.4, -0.84],
-  "bbox": null,
-  "historial": [1, 5],
-  "accion": "iac",
-  "cultivo_id": 1
-}
