@@ -17,6 +17,9 @@
 
 ---
 
+<img src="assets/asase-dashboard.png" alt="ASASE agricultural intelligence dashboard" width="100%">
+  
+
 ## 01. Overview
 
 **asase.** is an agricultural decision-support platform designed to help agricultural professionals, engineers, and cooperatives make informed decisions about land use, crop suitability, and crop rotation.
