@@ -275,21 +275,7 @@ The repository contains the agricultural model, API implementations, interface d
 
 ---
 
-## 10. Our Team
-
-asase. was developed by a multidisciplinary team combining software development, mathematical modeling, data analysis, and user experience design.
-
-| Area | Team Members |
-|------|--------------|
-| User Interface & Experience | Clara & Mario |
-| Data Sources & Processing | Javier Albero & Eduardo |
-| Mathematical Model & Python Algorithms | Javier Navarro & David |
-
-Developed in the context of the **NASA Space Apps Challenge 2026**.
-
----
-
-## 11. Our Vision
+## 10. Our Vision
 
 We believe that living in a low-resource community should never determine someone's opportunities.
 
@@ -305,7 +291,7 @@ By adapting agricultural parameters, expanding regional coverage, and incorporat
 
 ---
 
-## 12. Responsible Use
+## 11. Responsible Use
 
 asase. is an agricultural decision-support tool.
 
